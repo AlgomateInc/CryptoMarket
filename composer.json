@@ -11,12 +11,12 @@
     },
     "autoload": {
         "psr-4": {
-          "CryptoMarket\\": "src",
           "CryptoMarket\\AccountLoader\\": "src/accountloader",
           "CryptoMarket\\Account\\": "src/account",
           "CryptoMarket\\Exchange\\": "src/exchange",
           "CryptoMarket\\Helper\\": "src/helper",
-          "CryptoMarket\\Record\\": "src/record"
+          "CryptoMarket\\Record\\": "src/record",
+          "CryptoMarketTest\\": "tests"
         }
     }
 }

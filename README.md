@@ -12,17 +12,17 @@ run:
 
 ## AccountConfigData.php initial setup
 
-The CryptoMarket package is configured using the "AccountConfigData" class, to be defined 
-in the top-level "src/" directory.  "AccountConfigDataExample.php" is provided as a 
-template, which only allows access to public exchange APIs. To setup the basic
-AccountConfigData, run:
+The CryptoMarket package is configured using the "AccountConfigData" class, to 
+be defined in the top-level "tests/" directory.  "AccountConfigDataExample.php" 
+is provided as a template, which only allows access to public exchange APIs. To
+setup the basic AccountConfigData, run:
 
-    $ cp src/AccountConfigDataExample.php src/AccountConfigData.php
-    $ sed -i "s#AccountConfigDataExample#AccountConfigData#" src/AccountConfigData.php
+    $ cp tests/AccountConfigDataExample.php tests/AccountConfigData.php
+    $ sed -i "s#AccountConfigDataExample#AccountConfigData#" tests/AccountConfigData.php
     $ composer dumpautoload
 
-Note: For saftey, AccountConfigData.php is in .gitignore, so your API keys will not be 
-accidentally checked in to the repo.
+Note: For saftey, AccountConfigData.php is in .gitignore, so your API keys will 
+not be accidentally checked in.
 
 ## Test setup
 
@@ -59,14 +59,14 @@ Currently, there are two implementations of IAccountLoader:
 
 ## Using ConfigAccountLoader
 
-  * Add keys, secrets, and additional information to the ACCOUNTS_CONFIG section 
-  in src/AccountConfigData.php for desired exchanges
-  * Instantiate ConfigAccountLoader, which will find the keys from AccountConfigData
+  * Add keys, secrets, and additional information to the ACCOUNTS_CONFIG section
+  in tests/AccountConfigData.php for desired exchanges
+  * Instantiate ConfigAccountLoader with AccountsConfigData::ACCOUNTS_CONFIG
   * Call "getAccounts"
 
 ## Using MongoAccountLoader
 
-  * Add MONGODB_URI and MONGODB_NAME to src/AccountConfigData.php
+  * Add MONGODB_URI and MONGODB_NAME to tests/AccountConfigData.php
   * Add entries to the "servers" collection using the following document format:
   {
     'ServerName': 'xxxxxxxx', // any user-defined name, used to construct MongoAccountLoader
@@ -81,7 +81,11 @@ Currently, there are two implementations of IAccountLoader:
       // all other exchanges follow
     ]
   }
-  * Instantiate MongoAccountLoader with the "ServerName" specified in the previous step
+  * Instantiate MongoAccountLoader with the following:
+    - AccountsConfigData::MONGODB_URI
+    - AccountsConfigData::MONGODB_DBNAME
+    - AccountsConfigData::ACCOUNTS_CONFIG
+    - "ServerName" specified in the previous step
   * Call "getAccounts"
 
 # Running tests

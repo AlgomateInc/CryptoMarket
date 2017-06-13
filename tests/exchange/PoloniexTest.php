@@ -12,6 +12,8 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 
 use PHPUnit\Framework\TestCase;
 
+use CryptoMarketTest\AccountConfigData;
+
 use CryptoMarket\AccountLoader\ConfigAccountLoader;
 
 use CryptoMarket\Exchange\ExchangeName;
@@ -28,7 +30,7 @@ class PoloniexTest extends TestCase
         error_reporting(error_reporting() ^ E_NOTICE);
         date_default_timezone_set('UTC');
 
-        $cal = new ConfigAccountLoader();
+        $cal = new ConfigAccountLoader(AccountsConfigData::ACCOUNTS_CONFIG);
         $exchanges = $cal->getAccounts(array(ExchangeName::Poloniex));
         $this->mkt = $exchanges[ExchangeName::Poloniex];
     }

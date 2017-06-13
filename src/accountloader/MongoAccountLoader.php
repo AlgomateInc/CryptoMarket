@@ -2,7 +2,6 @@
 
 namespace CryptoMarket\AccountLoader;
 
-use CryptoMarket\AccountConfigData;
 use CryptoMarket\AccountLoader\IAccountLoader;
 
 use Mongodb\Client;
@@ -14,11 +13,16 @@ class MongoAccountLoader extends ConfigAccountLoader
 
     private $serverName = null;
 
-    public function __construct($serverName = null){
-        parent::__construct();
+    public function __construct(
+        $mongodbUri,
+        $mongodbName,
+        $accountsConfig,
+        $serverName = null)
+    {
+        parent::__construct($accountsConfig);
 
-        $this->mongo = new Client(AccountConfigData::MONGODB_URI);
-        $this->mdb = $this->mongo->selectDatabase(AccountConfigData::MONGODB_DBNAME);
+        $this->mongo = new Client($mongodbUri);
+        $this->mdb = $this->mongo->selectDatabase($mongodbName);
 
         if ($serverName === null) {
             $serverName = gethostname();

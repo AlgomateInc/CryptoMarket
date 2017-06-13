@@ -11,6 +11,8 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 
 use PHPUnit\Framework\TestCase;
 
+use CryptoMarketTest\AccountConfigData;
+
 use CryptoMarket\AccountLoader\ConfigAccountLoader;
 
 use CryptoMarket\Exchange\ExchangeName;
@@ -27,7 +29,7 @@ class YunbiTest extends TestCase
     {
         error_reporting(error_reporting() ^ E_NOTICE);
 
-        $cal = new ConfigAccountLoader();
+        $cal = new ConfigAccountLoader(AccountsConfigData::ACCOUNTS_CONFIG);
         $exchanges = $cal->getAccounts(array(ExchangeName::Yunbi));
         $this->mkt = $exchanges[ExchangeName::Yunbi];
         $this->mkt->init();

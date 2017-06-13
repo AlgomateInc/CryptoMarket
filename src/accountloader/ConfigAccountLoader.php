@@ -2,7 +2,6 @@
 
 namespace CryptoMarket\AccountLoader;
 
-use CryptoMarket\AccountConfigData;
 use CryptoMarket\AccountLoader\IAccountLoader;
 
 use CryptoMarket\Account\BitcoinAddress;
@@ -25,9 +24,9 @@ class ConfigAccountLoader implements IAccountLoader
 {
     protected $accountsConfig;
 
-    public function __construct()
+    public function __construct($accountsConfig)
     {
-        $this->accountsConfig = AccountConfigData::ACCOUNTS_CONFIG;
+        $this->accountsConfig = $accountsConfig;
     }
 
     function getConfig()

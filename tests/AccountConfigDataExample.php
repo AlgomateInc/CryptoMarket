@@ -1,6 +1,6 @@
 <?php
 
-namespace CryptoMarket;
+namespace CryptoMarketTest;
 
 class AccountConfigDataExample
 {
