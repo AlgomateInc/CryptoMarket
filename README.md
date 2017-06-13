@@ -94,4 +94,8 @@ All tests already include /vendor/autoload.php, so tests can be run using phpuni
 found in the vendor directory, e.g.:
 
     $ ./vendor/bin/phpunit tests/exchange/BitfinexTest.php
+    
+# Code Contributions
+
+Please follow the guidelines by: http://contribution-guide-org.readthedocs.io/
 
