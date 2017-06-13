@@ -12,7 +12,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 
 use PHPUnit\Framework\TestCase;
 
-use CryptoMarketTest\AccountConfigData;
+use CryptoMarketTest\ConfigData;
 
 use CryptoMarket\AccountLoader\ConfigAccountLoader;
 
@@ -29,7 +29,7 @@ class GeminiTest extends TestCase
     {
         error_reporting(error_reporting() ^ E_NOTICE);
 
-        $cal = new ConfigAccountLoader(AccountsConfigData::ACCOUNTS_CONFIG);
+        $cal = new ConfigAccountLoader(ConfigData::ACCOUNTS_CONFIG);
         $exchanges = $cal->getAccounts(array(ExchangeName::Gemini));
         $this->mkt = $exchanges[ExchangeName::Gemini];
         $this->mkt->init();
@@ -75,8 +75,10 @@ class GeminiTest extends TestCase
         foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
             $taker = $schedule->getFee($pair, TradingRole::Taker);
             $this->assertNotNull($taker);
+            sleep(1);
             $maker = $schedule->getFee($pair, TradingRole::Maker);
             $this->assertNotNull($maker);
+            sleep(1);
         }
     }
 
@@ -97,7 +99,7 @@ class GeminiTest extends TestCase
 
     public function testBasePrecision()
     {
-        $this->assertTrue($this->mkt instanceof Bitfinex);
+        $this->assertTrue($this->mkt instanceof Gemini);
         foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
             $ticker = $this->mkt->ticker($pair);
             $quotePrecision = $this->mkt->quotePrecision($pair, $ticker->bid);
@@ -109,6 +111,7 @@ class GeminiTest extends TestCase
 
             $ret = $this->mkt->buy($pair, $minOrder, $price);
             $this->checkAndCancelOrder($ret);
+            sleep(1);
         }
     }
 
@@ -125,7 +128,7 @@ class GeminiTest extends TestCase
     {
         if ($this->mkt instanceof Gemini)
         {
-            $response = $this->mkt->sell(CurrencyPair::BTCUSD, 1, 10000);
+            $response = $this->mkt->sell(CurrencyPair::BTCUSD, 0.01, 10000);
             $this->checkAndCancelOrder($response);
         }
     }

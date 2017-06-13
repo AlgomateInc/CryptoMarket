@@ -13,7 +13,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 
 use PHPUnit\Framework\TestCase;
 
-use CryptoMarketTest\AccountConfigData;
+use CryptoMarketTest\ConfigData;
 
 use CryptoMarket\AccountLoader\ConfigAccountLoader;
 
@@ -30,7 +30,7 @@ class BitfinexTest extends TestCase
     {
         error_reporting(error_reporting() ^ E_NOTICE);
 
-        $cal = new ConfigAccountLoader(AccountsConfigData::ACCOUNTS_CONFIG);
+        $cal = new ConfigAccountLoader(ConfigData::ACCOUNTS_CONFIG);
         $exchanges = $cal->getAccounts(array(ExchangeName::Bitfinex));
         $this->mkt = $exchanges[ExchangeName::Bitfinex];
         $this->mkt->init();
@@ -44,16 +44,15 @@ class BitfinexTest extends TestCase
         $this->assertEquals(5, $this->mkt->quotePrecision($pair, 0.1));
         $this->assertEquals(1, $this->mkt->quotePrecision($pair, 1000.0));
         $this->assertEquals(-2, $this->mkt->quotePrecision($pair, 1000000.0));
+        sleep(1);
     }
 
     public function testBalances()
     {
-        if ($this->mkt instanceof Bitfinex)
-        {
-            $ret = $this->mkt->balances();
+        $ret = $this->mkt->balances();
 
-            $this->assertNotEmpty($ret);
-        }
+        $this->assertNotEmpty($ret);
+        sleep(1);
     }
 
     public function testMinOrders()

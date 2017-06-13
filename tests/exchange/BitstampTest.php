@@ -13,7 +13,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 
 use PHPUnit\Framework\TestCase;
 
-use CryptoMarketTest\AccountConfigData;
+use CryptoMarketTest\ConfigData;
 
 use CryptoMarket\AccountLoader\ConfigAccountLoader;
 
@@ -33,7 +33,7 @@ class BitstampTest extends TestCase
     {
         error_reporting(error_reporting() ^ E_NOTICE);
 
-        $cal = new ConfigAccountLoader(AccountsConfigData::ACCOUNTS_CONFIG);
+        $cal = new ConfigAccountLoader(ConfigData::ACCOUNTS_CONFIG);
         $exchanges = $cal->getAccounts(array(ExchangeName::Bitstamp));
         $this->mkt = $exchanges[ExchangeName::Bitstamp];
         $this->mkt->init();

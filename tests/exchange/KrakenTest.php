@@ -12,7 +12,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 
 use PHPUnit\Framework\TestCase;
 
-use CryptoMarketTest\AccountConfigData;
+use CryptoMarketTest\ConfigData;
 
 use CryptoMarket\AccountLoader\ConfigAccountLoader;
 
@@ -29,7 +29,7 @@ class KrakenTest extends TestCase
     {
         error_reporting(error_reporting() ^ E_NOTICE);
 
-        $cal = new ConfigAccountLoader(AccountsConfigData::ACCOUNTS_CONFIG);
+        $cal = new ConfigAccountLoader(ConfigData::ACCOUNTS_CONFIG);
         $exchanges = $cal->getAccounts(array(ExchangeName::Kraken));
         $this->mkt = $exchanges[ExchangeName::Kraken];
         $this->mkt->init();
@@ -98,29 +98,26 @@ class KrakenTest extends TestCase
 
             $ret = $this->mkt->buy($pair, $minOrder, $price);
             $this->checkAndCancelOrder($ret);
+            sleep(1);
         }
     }
 
     public function testOrderSubmitAndCancel()
     {
-        if ($this->mkt instanceof Kraken)
-        {
-            $res = $this->mkt->sell(CurrencyPair::ETHBTC, 0.1, 1);
-            $this->checkAndCancelOrder($res);
-        }
+        $this->assertTrue($this->mkt instanceof Kraken);
+        $res = $this->mkt->sell(CurrencyPair::ETHBTC, 0.1, 1);
+        $this->checkAndCancelOrder($res);
     }
 
     public function testOrderSubmitAndExecute()
     {
-        if ($this->mkt instanceof Kraken)
-        {
-            $res = $this->mkt->sell(CurrencyPair::ETHBTC, 0.1, 0.001);
-            $this->assertTrue($this->mkt->isOrderAccepted($res));
-            sleep(1);
-            $this->assertFalse($this->mkt->isOrderOpen($res));
-            $oe = $this->mkt->getOrderExecutions($res);
-            $this->assertTrue(count($oe) > 1);
-        }
+        $this->assertTrue($this->mkt instanceof Kraken);
+        $res = $this->mkt->sell(CurrencyPair::ETHBTC, 0.1, 0.001);
+        $this->assertTrue($this->mkt->isOrderAccepted($res));
+        sleep(1);
+        $this->assertFalse($this->mkt->isOrderOpen($res));
+        $oe = $this->mkt->getOrderExecutions($res);
+        $this->assertTrue(count($oe) > 1);
     }
 
     private function checkAndCancelOrder($response)

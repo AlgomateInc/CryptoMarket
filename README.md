@@ -10,18 +10,18 @@ run:
 
     $ composer install
 
-## AccountConfigData.php initial setup
+## ConfigData.php initial setup
 
-The CryptoMarket package is configured using the "AccountConfigData" class, to 
-be defined in the top-level "tests/" directory.  "AccountConfigDataExample.php" 
+The CryptoMarket package is configured using the "ConfigData" class, to 
+be defined in the top-level "tests/" directory.  "ConfigDataExample.php" 
 is provided as a template, which only allows access to public exchange APIs. To
-setup the basic AccountConfigData, run:
+setup the basic ConfigData, run:
 
-    $ cp tests/AccountConfigDataExample.php tests/AccountConfigData.php
-    $ sed -i "s#AccountConfigDataExample#AccountConfigData#" tests/AccountConfigData.php
+    $ cp tests/ConfigDataExample.php tests/ConfigData.php
+    $ sed -i "s#ConfigDataExample#ConfigData#" tests/ConfigData.php
     $ composer dumpautoload
 
-Note: For saftey, AccountConfigData.php is in .gitignore, so your API keys will 
+Note: For saftey, ConfigData.php is in .gitignore, so your API keys will 
 not be accidentally checked in.
 
 ## Test setup
@@ -60,13 +60,13 @@ Currently, there are two implementations of IAccountLoader:
 ## Using ConfigAccountLoader
 
   * Add keys, secrets, and additional information to the ACCOUNTS_CONFIG section
-  in tests/AccountConfigData.php for desired exchanges
-  * Instantiate ConfigAccountLoader with AccountsConfigData::ACCOUNTS_CONFIG
+  in tests/ConfigData.php for desired exchanges
+  * Instantiate ConfigAccountLoader with ConfigData::ACCOUNTS_CONFIG
   * Call "getAccounts"
 
 ## Using MongoAccountLoader
 
-  * Add MONGODB_URI and MONGODB_NAME to tests/AccountConfigData.php
+  * Add MONGODB_URI and MONGODB_NAME to tests/ConfigData.php
   * Add entries to the "servers" collection using the following document format:
   {
     'ServerName': 'xxxxxxxx', // any user-defined name, used to construct MongoAccountLoader
@@ -82,9 +82,9 @@ Currently, there are two implementations of IAccountLoader:
     ]
   }
   * Instantiate MongoAccountLoader with the following:
-    - AccountsConfigData::MONGODB_URI
-    - AccountsConfigData::MONGODB_DBNAME
-    - AccountsConfigData::ACCOUNTS_CONFIG
+    - ConfigData::MONGODB_URI
+    - ConfigData::MONGODB_DBNAME
+    - ConfigData::ACCOUNTS_CONFIG
     - "ServerName" specified in the previous step
   * Call "getAccounts"
 

@@ -2,7 +2,7 @@
 
 namespace CryptoMarketTest;
 
-class AccountConfigDataExample
+class ConfigDataExample
 {
     const MONGODB_URI = 'mongodb://localhost';
     const MONGODB_DBNAME = 'coindata';

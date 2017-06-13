@@ -12,7 +12,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 
 use PHPUnit\Framework\TestCase;
 
-use CryptoMarketTest\AccountConfigData;
+use CryptoMarketTest\ConfigData;
 
 use CryptoMarket\AccountLoader\ConfigAccountLoader;
 
@@ -30,7 +30,7 @@ class PoloniexTest extends TestCase
         error_reporting(error_reporting() ^ E_NOTICE);
         date_default_timezone_set('UTC');
 
-        $cal = new ConfigAccountLoader(AccountsConfigData::ACCOUNTS_CONFIG);
+        $cal = new ConfigAccountLoader(ConfigData::ACCOUNTS_CONFIG);
         $exchanges = $cal->getAccounts(array(ExchangeName::Poloniex));
         $this->mkt = $exchanges[ExchangeName::Poloniex];
     }
@@ -70,17 +70,15 @@ class PoloniexTest extends TestCase
 
             $ret = $this->mkt->buy($pair, $minOrder, $price);
             $this->checkAndCancelOrder($ret);
+            sleep(1);
         }
     }
 
     public function testBalances()
     {
-        if ($this->mkt instanceof Poloniex)
-        {
-            $ret = $this->mkt->balances();
-
-            $this->assertNotEmpty($ret);
-        }
+        $this->assertTrue($this->mkt instanceof Poloniex);
+        $ret = $this->mkt->balances();
+        $this->assertNotEmpty($ret);
     }
 
     public function testFees()
@@ -113,68 +111,57 @@ class PoloniexTest extends TestCase
             $this->assertNotNull($taker);
             $maker = $schedule->getFee($pair, TradingRole::Maker);
             $this->assertNotNull($maker);
+            sleep(1);
         }
     }
 
     public function testBuyOrderSubmission()
     {
-        if ($this->mkt instanceof Poloniex)
-        {
-            $response = $this->mkt->buy(CurrencyPair::XCPBTC, 1, 0.0001);
-            $this->checkAndCancelOrder($response);
-        }
+        $this->assertTrue($this->mkt instanceof Poloniex);
+        $response = $this->mkt->buy(CurrencyPair::XCPBTC, 1, 0.0001);
+        $this->checkAndCancelOrder($response);
     }
 
     public function testSellOrderSubmission()
     {
-        if ($this->mkt instanceof Poloniex)
-        {
-            $response = $this->mkt->sell(CurrencyPair::XCPBTC, 1, 1000);
-            $this->checkAndCancelOrder($response);
-        }
+        $this->assertTrue($this->mkt instanceof Poloniex);
+        $response = $this->mkt->sell(CurrencyPair::XCPBTC, 1, 1000);
+        $this->checkAndCancelOrder($response);
     }
 
     public function testOrderExecutions()
     {
-        if ($this->mkt instanceof Poloniex)
-        {
-            $response = $this->mkt->buy(CurrencyPair::XCPBTC, 1, 1);
-            $oe = $this->mkt->getOrderExecutions($response);
+        $this->assertTrue($this->mkt instanceof Poloniex);
+        $response = $this->mkt->buy(CurrencyPair::XCPBTC, 1, 1);
+        $oe = $this->mkt->getOrderExecutions($response);
 
-            $this->assertNotNull($oe);
-            $this->assertTrue(count($oe) > 0);
-        }
+        $this->assertNotNull($oe);
+        $this->assertTrue(count($oe) > 0);
     }
 
     public function testMyTrades()
     {
-        if ($this->mkt instanceof Poloniex)
-        {
-            $res = $this->mkt->tradeHistory(50);
-            $this->assertNotNull($res);
-        }
+        $this->assertTrue($this->mkt instanceof Poloniex);
+        $res = $this->mkt->tradeHistory(50);
+        $this->assertNotNull($res);
     }
 
     public function testPublicTrades()
     {
-        if ($this->mkt instanceof Poloniex)
-        {
-            $res = $this->mkt->trades(CurrencyPair::XCPBTC, time()-600);
-            $this->assertNotNull($res);
-        }
+        $this->assertTrue($this->mkt instanceof Poloniex);
+        $res = $this->mkt->trades(CurrencyPair::XCPBTC, time()-600);
+        $this->assertNotNull($res);
     }
 
     private function checkAndCancelOrder($response)
     {
-        if (!$this->mkt instanceof Poloniex)
-            return;
-
         $this->assertNotNull($response);
 
         $this->assertTrue($this->mkt->isOrderAccepted($response));
         $this->assertTrue($this->mkt->isOrderOpen($response));
 
         $this->assertNotNull($this->mkt->cancel($this->mkt->getOrderID($response)));
+        sleep(1);
         $this->assertFalse($this->mkt->isOrderOpen($response));
     }
 }

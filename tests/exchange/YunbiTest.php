@@ -11,7 +11,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 
 use PHPUnit\Framework\TestCase;
 
-use CryptoMarketTest\AccountConfigData;
+use CryptoMarketTest\ConfigData;
 
 use CryptoMarket\AccountLoader\ConfigAccountLoader;
 
@@ -29,7 +29,7 @@ class YunbiTest extends TestCase
     {
         error_reporting(error_reporting() ^ E_NOTICE);
 
-        $cal = new ConfigAccountLoader(AccountsConfigData::ACCOUNTS_CONFIG);
+        $cal = new ConfigAccountLoader(ConfigData::ACCOUNTS_CONFIG);
         $exchanges = $cal->getAccounts(array(ExchangeName::Yunbi));
         $this->mkt = $exchanges[ExchangeName::Yunbi];
         $this->mkt->init();
@@ -77,7 +77,6 @@ class YunbiTest extends TestCase
 
         foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
             $ticker = $this->mkt->ticker($pair);
-            var_dump($ticker);
             $precision = $this->mkt->quotePrecision($pair, $ticker->bid);
             $this->assertEquals($ticker->bid, round($ticker->bid, $precision), "Failure on $ticker->currencyPair");
             $this->assertEquals($ticker->ask, round($ticker->ask, $precision), "Failure on $ticker->currencyPair");

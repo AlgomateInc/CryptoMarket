@@ -11,7 +11,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 
 use PHPUnit\Framework\TestCase;
 
-use CryptoMarketTest\AccountConfigData;
+use CryptoMarketTest\ConfigData;
 
 use CryptoMarket\AccountLoader\ConfigAccountLoader;
 
@@ -29,7 +29,7 @@ class GdaxTest extends TestCase
     {
         error_reporting(error_reporting() ^ E_NOTICE);
 
-        $cal = new ConfigAccountLoader(AccountsConfigData::ACCOUNTS_CONFIG);
+        $cal = new ConfigAccountLoader(ConfigData::ACCOUNTS_CONFIG);
         $exchanges = $cal->getAccounts(array(ExchangeName::Gdax));
         $this->mkt = $exchanges[ExchangeName::Gdax];
         $this->mkt->init();
@@ -108,9 +108,9 @@ class GdaxTest extends TestCase
     public function testFees()
     {
         $this->assertTrue($this->mkt instanceof Gdax);
-        $this->assertEquals(0.10, $this->mkt->tradingFee(CurrencyPair::BTCEUR, TradingRole::Taker, 10000.0));
+        $this->assertEquals(0.15, $this->mkt->tradingFee(CurrencyPair::BTCEUR, TradingRole::Taker, 10000.0));
         sleep(1);
-        $this->assertEquals(0.25, $this->mkt->tradingFee(CurrencyPair::BTCEUR, TradingRole::Taker, 10.0));
+        $this->assertEquals(0.30, $this->mkt->tradingFee(CurrencyPair::BTCEUR, TradingRole::Taker, 10.0));
         sleep(1);
         $this->assertEquals(0.0, $this->mkt->tradingFee(CurrencyPair::BTCUSD, TradingRole::Maker, 0.1));
         sleep(1);
@@ -144,7 +144,7 @@ class GdaxTest extends TestCase
     public function testBuyOrderSubmission()
     {
         $this->assertTrue($this->mkt instanceof Gdax);
-        $ret = $this->mkt->buy(CurrencyPair::BTCUSD, 0.01, 0.01);
+        $ret = $this->mkt->buy(CurrencyPair::BTCUSD, 0.01, 1.00);
         $this->checkAndCancelOrder($ret);
     }
 

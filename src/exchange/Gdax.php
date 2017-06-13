@@ -50,7 +50,7 @@ class Gdax extends BaseExchange implements ILifecycleHandler
         // From https://docs.gdax.com/#fees
         // Note, these volume thresholds are in % of total
         $genericFeeSchedule = new FeeScheduleList();
-        $genericFeeSchedule->push(new FeeScheduleItem(0.0, 1.0e-2, 0.25, 0.0));
+        $genericFeeSchedule->push(new FeeScheduleItem(0.0, 1.0e-2, 0.30, 0.0));
         $genericFeeSchedule->push(new FeeScheduleItem(1.0e-2, 2.5e-2, 0.24, 0.0));
         $genericFeeSchedule->push(new FeeScheduleItem(2.5e-2, 5.0e-2, 0.22, 0.0));
         $genericFeeSchedule->push(new FeeScheduleItem(5.0e-2, 1.0e-1, 0.19, 0.0));
@@ -133,7 +133,10 @@ class Gdax extends BaseExchange implements ILifecycleHandler
             $totalVolume += $candle[5];
         }
 
-        $volumePercentage = $thirty_day_volume / $totalVolume;
+        $volumePercentage = 0.0;
+        if ($totalVolume != 0.0) {
+            $volumePercentage = $thirty_day_volume / $totalVolume;
+        }
         return $this->feeSchedule->getFee($pair, $tradingRole, $volumePercentage);
     }
 

@@ -12,7 +12,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 
 use PHPUnit\Framework\TestCase;
 
-use CryptoMarketTest\AccountConfigData;
+use CryptoMarketTest\ConfigData;
 
 use CryptoMarket\AccountLoader\ConfigAccountLoader;
 
@@ -29,7 +29,7 @@ class BtceTest extends TestCase
     {
         error_reporting(error_reporting() ^ E_NOTICE);
 
-        $cal = new ConfigAccountLoader(AccountsConfigData::ACCOUNTS_CONFIG);
+        $cal = new ConfigAccountLoader(ConfigData::ACCOUNTS_CONFIG);
         $exchanges = $cal->getAccounts(array(ExchangeName::Btce));
         $this->mkt = $exchanges[ExchangeName::Btce];
         $this->mkt->init();
@@ -124,13 +124,10 @@ class BtceTest extends TestCase
 
     public function testOrderSubmitAndCancel()
     {
-        if ($this->mkt instanceof Btce)
-        {
-            $res = $this->mkt->buy(CurrencyPair::BTCUSD, 1, 1);
-            $this->assertTrue($this->mkt->isOrderAccepted($res));
-            sleep(1);
-            $cres = $this->mkt->cancel($res['return']['order_id']);
-        }
+        $res = $this->mkt->buy(CurrencyPair::BTCUSD, 1, 1);
+        $this->assertTrue($this->mkt->isOrderAccepted($res));
+        sleep(1);
+        $cres = $this->mkt->cancel($res['return']['order_id']);
     }
 
     public function testTradeHistory()
