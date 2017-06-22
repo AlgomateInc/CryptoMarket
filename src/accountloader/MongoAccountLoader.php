@@ -12,6 +12,8 @@ class MongoAccountLoader extends ConfigAccountLoader
     private $mdb;
 
     private $serverName = null;
+    private $unencryptedConfig = array();
+    private $encryptedConfig = array();
 
     public function __construct(
         $mongodbUri,
@@ -30,39 +32,68 @@ class MongoAccountLoader extends ConfigAccountLoader
         $this->serverName = $serverName;
     }
 
-    function loadAccountConfig($serverName)
+    private function addUnencryptedConfig($mktConfig)
     {
-        $serverAccounts = $this->mdb->servers;
-
-        //get the name of this server
-        $machineName = $serverName;
-
-        //find the config for this server
-        $acc = $serverAccounts->findOne(array('ServerName' => $machineName));
-        if ($acc === null)
-            return;
-
-        $mktConfig = $acc['ExchangeSettings'];
-
-        //rework the exchange settings to expected, legacy, format used by ConfigAccountLoader
-        //which expects an associative array
-        $this->accountsConfig = array();
+        //rework the exchange settings to expected, legacy, format used
+        //by ConfigAccountLoader, which expects an associative array
         foreach ($mktConfig as $mktSetItem) {
-            $this->accountsConfig[$mktSetItem['Name']] = $mktSetItem['Settings'];
+            $this->unencryptedConfig[$mktSetItem['Name']] = $mktSetItem['Settings'];
         }
     }
 
-    function getConfig()
+    private function addEncryptedConfig($mktConfig, $privateKey)
     {
-        $this->loadAccountConfig($this->serverName);
-        return parent::getConfig();
+        foreach ($mktConfig as $mktSetItem) {
+            $dataString = base64_decode($mktSetItem['Data']);
+            openssl_private_decrypt($dataString, $decryptedString, $privateKey);
+            $this->encryptedConfig[$mktSetItem['Name']] = json_decode($decryptedString, true); // return as array
+        }
     }
 
-    function getAccounts(array $mktFilter = null)
+    private function loadAccountConfig($serverName, $privateKey)
     {
-        $this->loadAccountConfig($this->serverName);
+        $serverAccounts = $this->mdb->servers;
 
-        return parent::getAccounts($mktFilter);
+        //find the config for this server
+        $cursor = $serverAccounts->find(['ServerName' => $serverName]);
+        $unencryptedDbConfig = null;
+        $encryptedDbConfig = null;
+
+        foreach ($cursor as $dbSettings) {
+            if (array_key_exists('ExchangeSettings', $dbSettings)) {
+                $unencryptedDbConfig = $dbSettings['ExchangeSettings'];
+            }
+            if (array_key_exists('ServerExchangeSettings', $dbSettings)) {
+                $encryptedDbConfig = $dbSettings['ServerExchangeSettings'];
+            }
+        }
+
+        if (isset($unencryptedDbConfig)) {
+            $this->unencryptedConfig = array();
+            $this->addUnencryptedConfig($unencryptedDbConfig);
+        }
+        if (isset($privateKey) && isset($encryptedDbConfig)) {
+            $this->encryptedConfig = array();
+            $this->addEncryptedConfig($encryptedDbConfig, $privateKey);
+        }
+
+        foreach (array_intersect_key($this->encryptedConfig, $this->unencryptedConfig) as $mktName => $mktSettings) {
+            printf("MongoAccountLoader: Encrypted config for $mktName overrides unencrypted\n");
+        }
+    }
+
+    public function getConfig($privateKey = null)
+    {
+        $this->loadAccountConfig($this->serverName, $privateKey);
+        // merge all arrays together
+        return array_replace(parent::getConfig($privateKey),
+            $this->unencryptedConfig,
+            $this->encryptedConfig);
+    }
+
+    public function getAccounts(array $mktFilter = null, $privateKey = null)
+    {
+        return $this->getMarketObjects($this->getConfig($privateKey), $mktFilter);
     }
 }
 

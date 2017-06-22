@@ -3,7 +3,7 @@
 namespace CryptoMarket\AccountLoader;
 
 interface IAccountLoader {
-    function getAccounts(array $mktFilter = null);
-    function getConfig();
+    function getAccounts(array $mktFilter = null, $privateKey = null);
+    function getConfig($privateKey = null);
 } 
 

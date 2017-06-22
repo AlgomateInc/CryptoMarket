@@ -22,23 +22,23 @@ use CryptoMarket\Exchange\Yunbi;
 
 class ConfigAccountLoader implements IAccountLoader
 {
-    protected $accountsConfig;
+    private $accountsConfig;
 
     public function __construct($accountsConfig)
     {
         $this->accountsConfig = $accountsConfig;
     }
 
-    function getConfig()
+    public function getConfig($privateKey = null)
     {
         return $this->accountsConfig;
     }
 
-    function getAccounts(array $mktFilter = null)
+    protected function getMarketObjects($accountsConfig, $mktFilter)
     {
         $accounts = array();
 
-        foreach ($this->accountsConfig as $mktName => $mktConfig){
+        foreach ($accountsConfig as $mktName => $mktConfig){
 
             //filter to specific exchanges, as specified
             if ($mktFilter != null) {
@@ -143,6 +143,11 @@ class ConfigAccountLoader implements IAccountLoader
         }
 
         return $accounts;
+    }
+
+    public function getAccounts(array $mktFilter = null, $privateKey = null)
+    {
+        $this->getMarketObjects($this->accountsConfig, $mktFilter);
     }
 }
 
