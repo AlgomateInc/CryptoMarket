@@ -33,6 +33,29 @@ class PoloniexTest extends TestCase
         $cal = new ConfigAccountLoader(ConfigData::ACCOUNTS_CONFIG);
         $exchanges = $cal->getAccounts(array(ExchangeName::Poloniex));
         $this->mkt = $exchanges[ExchangeName::Poloniex];
+        $this->mkt->init();
+    }
+
+    public function testSupportedPairs()
+    {
+        $this->assertTrue($this->mkt instanceof Poloniex);
+        $this->assertTrue($this->mkt->supports(CurrencyPair::BTCUSD));
+        $this->assertTrue($this->mkt->supports(CurrencyPair::ETHUSD));
+        $this->assertTrue($this->mkt->supports(CurrencyPair::ETHBTC));
+        $this->assertTrue($this->mkt->supports('LTCXMR'));
+    }
+
+    public function testGetAllMarketData()
+    {
+        $this->assertTrue($this->mkt instanceof Poloniex);
+        $ret = $this->mkt->tickers();
+        foreach ($ret as $ticker) {
+            $this->assertTrue($this->mkt->supports($ticker->currencyPair));
+            $this->assertNotNull($ticker->bid);
+            $this->assertNotNull($ticker->ask);
+            $this->assertNotNull($ticker->last);
+            $this->assertNotNull($ticker->volume);
+        }
     }
 
     public function testMinOrderSize()

@@ -147,7 +147,7 @@ class ConfigAccountLoader implements IAccountLoader
 
     public function getAccounts(array $mktFilter = null, $privateKey = null)
     {
-        $this->getMarketObjects($this->accountsConfig, $mktFilter);
+        return $this->getMarketObjects($this->accountsConfig, $mktFilter);
     }
 }
 

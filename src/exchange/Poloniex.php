@@ -29,7 +29,7 @@ use CryptoMarket\Record\TradingRole;
 
 use MongoDB\BSON\UTCDateTime;
 
-class Poloniex extends BaseExchange
+class Poloniex extends BaseExchange implements ILifecycleHandler
 {
     protected $trading_url = "https://poloniex.com/tradingApi";
     protected $public_url = "https://poloniex.com/public";
@@ -39,6 +39,7 @@ class Poloniex extends BaseExchange
     private $nonceFactory;
 
     private $feeSchedule;
+    private $supportedPairs;
 
     public function __construct($key, $secret){
         $this->key = $key;
@@ -60,6 +61,16 @@ class Poloniex extends BaseExchange
         $fallbackSchedule->push(new FeeScheduleItem(6.0e4, 1.2e5, 0.08, 0.00));
         $fallbackSchedule->push(new FeeScheduleItem(1.2e5, INF, 0.05, 0.00));
         $this->feeSchedule->setFallbackFees($fallbackSchedule);
+
+        $this->supportedPairs = array();
+    }
+
+    public function init()
+    {
+        $tickers = CurlHelper::query($this->public_url.'?command=returnTicker');
+        foreach ($tickers as $pairName => $value) {
+            $this->supportedPairs[] = $this->getStandardPairName($pairName);
+        }
     }
 
     public function Name()
@@ -131,9 +142,7 @@ class Poloniex extends BaseExchange
      */
     public function supportedCurrencyPairs()
     {
-        return array(CurrencyPair::LTCBTC, CurrencyPair::XMRBTC, CurrencyPair::BTCUSD,
-            CurrencyPair::XCPBTC, CurrencyPair::MAIDBTC, CurrencyPair::ETHBTC,
-            CurrencyPair::ETHUSD, 'ETCBTC', 'STEEM/BTC', 'XRPBTC');
+        return $this->supportedPairs;
     }
 
     /**
@@ -156,9 +165,27 @@ class Poloniex extends BaseExchange
         return max($minOrder, $MIN_AMOUNT);
     }
 
+    public function tickers()
+    {
+        $ret = array();
+        
+        $prices = CurlHelper::query($this->public_url.'?command=returnTicker');
+        foreach ($prices as $pair => $price) {
+            $t = new Ticker();
+            $t->currencyPair = $this->getStandardPairName($pair);
+            $t->bid = $price['highestBid'];
+            $t->ask = $price['lowestAsk'];
+            $t->last = $price['last'];
+            $t->volume = $price['quoteVolume'];
+            $ret[] = $t;
+        }
+
+        return $ret;
+    }
+
     public function ticker($pair)
     {
-        $mktPairName = $this->getCurrencyPairName($pair);
+        $mktPairName = $this->getPoloniexPairName($pair);
         $prices = CurlHelper::query($this->public_url.'?command=returnTicker');
 
         $t = new Ticker();
@@ -173,7 +200,7 @@ class Poloniex extends BaseExchange
 
     public function trades($pair, $sinceDate)
     {
-        $mktPairName = $this->getCurrencyPairName($pair);
+        $mktPairName = $this->getPoloniexPairName($pair);
 
         $trades = CurlHelper::query($this->public_url.'?command=returnTradeHistory&currencyPair='. $mktPairName .
             '&start=' . $sinceDate . '&end=' . time());
@@ -200,7 +227,7 @@ class Poloniex extends BaseExchange
 
     public function depth($currencyPair)
     {
-        $mktPairName = $this->getCurrencyPairName($currencyPair);
+        $mktPairName = $this->getPoloniexPairName($currencyPair);
         $rawBook = CurlHelper::query($this->public_url.'?command=returnOrderBook&currencyPair='. $mktPairName);
         return new OrderBook($rawBook);
     }
@@ -210,7 +237,7 @@ class Poloniex extends BaseExchange
         return $this->query(
             array(
                 'command' => 'buy',
-                'currencyPair' => mb_strtoupper($this->getCurrencyPairName($pair)),
+                'currencyPair' => mb_strtoupper($this->getPoloniexPairName($pair)),
                 'rate' => $price,
                 'amount' => $quantity
             )
@@ -222,7 +249,7 @@ class Poloniex extends BaseExchange
         return $this->query(
             array(
                 'command' => 'sell',
-                'currencyPair' => mb_strtoupper($this->getCurrencyPairName($pair)),
+                'currencyPair' => mb_strtoupper($this->getPoloniexPairName($pair)),
                 'rate' => $price,
                 'amount' => $quantity
             )
@@ -316,7 +343,7 @@ class Poloniex extends BaseExchange
             $th = $this->query(
                 array(
                     'command' => 'returnTradeHistory',
-                    'currencyPair' => mb_strtoupper($this->getCurrencyPairName($pair))
+                    'currencyPair' => mb_strtoupper($this->getPoloniexPairName($pair))
                 )
             );
 
@@ -368,29 +395,42 @@ class Poloniex extends BaseExchange
         return CurlHelper::query($this->trading_url, $post_data, $headers);
     }
 
-    private function getCurrencyPairName($pair)
+    private function getStandardPairName($poloniexPair)
     {
-        if(!$this->supports($pair))
+        // Format is QUOTE_BASE, and no USD, only USDT
+        $parts = explode('_', $poloniexPair);
+        $quote = $parts[0];
+        $base = $parts[1];
+        if ($quote == Currency::USDT) {
+            $quote = Currency::USD;
+        }
+        if ($base == Currency::USDT) {
+            $base = Currency::USD;
+        }
+        return CurrencyPair::MakePair($base, $quote);
+    }
+
+    private function getPoloniexPairName($pair)
+    {
+        if (!$this->supports($pair)) {
             throw new \UnexpectedValueException('Currency pair not supported');
+        }
 
         $base = CurrencyPair::Base($pair);
         $quote = CurrencyPair::Quote($pair);
 
-        //return USD market as tether
-        if($pair == CurrencyPair::BTCUSD)
-            return 'USDT_BTC';
+        // No USD, only USDT
+        if ($quote == Currency::USD) {
+            $quote = Currency::USDT;
+        }
+        if ($base == Currency::USD) {
+            $base = Currency::USDT;
+        }
 
-        if($pair == CurrencyPair::ETHUSD)
-            return 'USDT_ETH';
+        // Poloniex reverses base and quote currency, so BTCUSD becomes USDT_BTC
+        // There are 4 main quote currencies, BTC, ETH, XMR, and USDT
 
-        //make the pair in the wacky poloniex way
-        if($base == Currency::BTC)
-            return $base . '_' . $quote;
-
-        if($quote == Currency::BTC)
-            return $quote . '_' . $base;
-
-        throw new \Exception('Unsupported pair');
+        return $quote . '_' . $base;
     }
 }
 
