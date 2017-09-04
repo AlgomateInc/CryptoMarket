@@ -45,11 +45,14 @@ class BitstampTest extends TestCase
         $this->assertNotEmpty($depth);
     }
 
-    public function testTicker()
+    public function testTickers()
     {
-        $ticker = $this->mkt->ticker(CurrencyPair::XRPEUR);
-        $this->assertNotEmpty($ticker);
-        $this->assertTrue($ticker instanceof Ticker);
+        $currs = $this->mkt->supportedCurrencyPairs();
+        foreach ($currs as $curr) {
+            $ticker = $this->mkt->ticker($curr);
+            $this->assertNotEmpty($ticker);
+            $this->assertTrue($ticker instanceof Ticker);
+        }
     }
 
     public function testBalances()

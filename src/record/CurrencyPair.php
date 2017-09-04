@@ -13,6 +13,7 @@ class CurrencyPair
     const FTCBTC = 'FTCBTC';
     const LTCBTC = 'LTCBTC';
     const LTCUSD = 'LTCUSD';
+    const LTCEUR = 'LTCEUR';
     const DRKUSD = 'DRKUSD';
     const NXTBTC = 'NXTBTC';
     const DRKBTC = 'DRKBTC';
@@ -21,6 +22,7 @@ class CurrencyPair
     const MAIDBTC = 'MAID/BTC';
     const ETHBTC = 'ETHBTC';
     const ETHUSD = 'ETHUSD';
+    const ETHEUR = 'ETHEUR';
     const DAOETH = 'DAOETH';
     const BTCCNY = 'BTCCNY';
     const ETHCNY = 'ETHCNY';
