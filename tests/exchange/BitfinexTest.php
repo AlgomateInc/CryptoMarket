@@ -22,6 +22,7 @@ use CryptoMarket\Exchange\Bitfinex;
 
 use CryptoMarket\Record\CurrencyPair;
 use CryptoMarket\Record\TradingRole;
+use CryptoMarket\Record\Transaction;
 
 class BitfinexTest extends TestCase
 {
@@ -146,6 +147,18 @@ class BitfinexTest extends TestCase
         {
             $res = $this->mkt->trades(CurrencyPair::BTCUSD, time()-60);
             $this->assertNotNull($res);
+        }
+    }
+
+    public function testTransactions()
+    {
+        $this->assertTrue($this->mkt instanceof Bitfinex);
+        $transactions = $this->mkt->transactions();
+        $this->assertNotEmpty($transactions);
+        foreach ($transactions as $trans) {
+            $this->assertEquals("Bitfinex", $trans->exchange);
+            $this->assertTrue($trans instanceof Transaction);
+            $this->assertTrue($trans->isValid());
         }
     }
 

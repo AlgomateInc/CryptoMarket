@@ -20,6 +20,8 @@ use CryptoMarket\Record\OrderType;
 use CryptoMarket\Record\Ticker;
 use CryptoMarket\Record\Trade;
 use CryptoMarket\Record\TradingRole;
+use CryptoMarket\Record\Transaction;
+use CryptoMarket\Record\TransactionType;
 
 use MongoDB\BSON\UTCDateTime;
 
@@ -99,7 +101,35 @@ class Bitfinex extends BaseExchange implements IMarginExchange, ILifecycleHandle
 
     public function transactions()
     {
-        // TODO: Implement transactions() method.
+        $ret = array();
+        foreach ($this->supportedCurrencies() as $curr) {
+            $transactionInfo = $this->authQuery('history/movements',array(
+                'currency' => mb_strtolower($curr),
+            ));
+            foreach ($transactionInfo as $trans) {
+                if ($trans['status'] != 'COMPLETED') {
+                    continue;
+                }
+                $tx = new Transaction();
+                $tx->exchange = ExchangeName::Bitfinex;
+                $tx->id = $trans['txid'];
+                if ($trans['type'] == 'WITHDRAWAL') {
+                    $tx->type = TransactionType::Debit;
+                } else if ($trans['type'] == 'DEPOSIT') {
+                    $tx->type = TransactionType::Credit;
+                } else {
+                    throw new \UnexpectedValueException('Transaction type [$trans] not supported');
+                }
+                $tx->currency = $trans['currency'];
+                $tx->amount = floatval($trans['amount']);
+                $tx->timestamp = new UTCDateTime(MongoHelper::mongoDateOfPHPDate(strtotime($trans['timestamp'])));
+
+                $ret[] = $tx;
+            }
+            // To avoid hammering the servers too hard
+            sleep(1);
+        }
+        return $ret;
     }
 
     public function tradingFee($pair, $tradingRole, $volume)

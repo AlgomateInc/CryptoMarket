@@ -5,7 +5,7 @@ namespace CryptoMarket\Record;
 class Transaction{
     /** @var string */
     public $exchange;
-    /** @var int */
+    /** @var int or string */
     public $id;
     /** @var string */
     public $type;
@@ -16,37 +16,41 @@ class Transaction{
     /** @var int or MongoDB\BSON\UTCDateTime */
     public $timestamp;
 
+    private function fail($name, $value) {
+        printf("$name failed: ");
+        var_dump($value);
+        return false;
+    }
+
     public function isValid()
     {
         if (!is_string($this->exchange) || $this->exchange == "") {
-            printf("Exchange is empty: ");
-            var_dump($this->exchange);
-            return false;
+            return $this->fail('Exchange', $this->exchange);
         }
 
-        if (!is_int($this->id) || $this->id == 0) {
-            printf("Id is empty: ");
-            var_dump($this->id);
-            return false;
+        if (is_int($this->id)) {
+            if ($this->id == 0) {
+                return $this->fail('Id', $this->id);
+            }
+        } else if (is_string($this->id)) {
+            if ($this->id == "") {
+                return $this->fail('Id', $this->id);
+            }
+        } else {
+            return $this->fail('Id', $this->id);
         }
 
         if (!is_string($this->type) ||
             ($this->type != TransactionType::Credit && $this->type != TransactionType::Debit)) {
-            printf("Type is invalid: ");
-            var_dump($this->type);
-            return false;
+            return $this->fail('Type', $this->type);
         }
 
         if (!is_string($this->currency) || $this->currency == "") {
-            printf("Currency is invalid: ");
-            var_dump($this->currency);
-            return false;
+            return $this->fail('Currency', $this->currency);
         }
 
         if (!is_float($this->amount) || $this->amount == 0.0) {
-            printf("Amount is empty: ");
-            var_dump($this->amount);
-            return false;
+            return $this->fail('Amount', $this->amount);
         }
 
         /* Need to make sure that timestamps are always the same type first
