@@ -20,6 +20,7 @@ use CryptoMarket\Exchange\Gdax;
 
 use CryptoMarket\Record\CurrencyPair;
 use CryptoMarket\Record\TradingRole;
+use CryptoMarket\Record\Transaction;
 
 class GdaxTest extends TestCase
 {
@@ -175,6 +176,18 @@ class GdaxTest extends TestCase
         sleep(1);
         $exec = $this->mkt->getOrderExecutions($ret);
         $this->assertTrue(count($exec) > 0);
+    }
+
+    public function testTransactions()
+    {
+        $this->assertTrue($this->mkt instanceof Gdax);
+        $transactions = $this->mkt->transactions();
+        $this->assertNotEmpty($transactions);
+        foreach ($transactions as $trans) {
+            $this->assertEquals("Gdax", $trans->exchange);
+            $this->assertTrue($trans instanceof Transaction);
+            $this->assertTrue($trans->isValid());
+        }
     }
 
     private function checkAndCancelOrder($response)

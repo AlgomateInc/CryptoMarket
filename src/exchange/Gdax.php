@@ -19,6 +19,8 @@ use CryptoMarket\Record\OrderType;
 use CryptoMarket\Record\Ticker;
 use CryptoMarket\Record\Trade;
 use CryptoMarket\Record\TradingRole;
+use CryptoMarket\Record\Transaction;
+use CryptoMarket\Record\TransactionType;
 
 use MongoDB\BSON\UTCDateTime;
 
@@ -180,7 +182,51 @@ class Gdax extends BaseExchange implements ILifecycleHandler
 
     public function transactions()
     {
-        // TODO: Implement transactions() method.
+        $ret = array();
+        $allAccounts = $this->authQuery('/accounts');
+        foreach ($allAccounts as $accountInfo) {
+            $curr = $accountInfo['currency'];
+            $after_cursor = '';
+            do
+            {
+                $url = '/accounts/'.$accountInfo['id'].'/ledger/'.$after_cursor;
+                $entries = $this->authQuery($url, 'GET', '', true);
+
+                // See https://docs.gdax.com/#pagination for pagination details
+                if (isset($entries['header']['Cb-After'])) {
+                    $after_cursor = '?after='.$entries['header']['Cb-After'];
+                } else {
+                    $after_cursor = '';
+                }
+
+                foreach ($entries['body'] as $entry) {
+                    if ($entry['type'] != 'transfer') {
+                        continue;
+                    }
+
+                    $tx = new Transaction();
+                    $tx->exchange = ExchangeName::Gdax;
+                    $tx->id = $entry['id'];
+                    if (array_key_exists('details', $entry) &&
+                        array_key_exists('transfer_type', $entry['details'])) {
+                        if ($entry['details']['transfer_type'] == 'deposit') {
+                            $tx->type = TransactionType::Credit;
+                        } else if ($entry['details']['transfer_type'] == 'withdraw') {
+                            $tx->type = TransactionType::Debit;
+                        }
+                    }
+                    $amount = floatval($entry['amount']);
+                    if ($amount != 0) {
+                        $tx->currency = $curr;
+                        $tx->amount = $amount;
+                    }
+                    $tx->timestamp = new UTCDateTime(MongoHelper::mongoDateOfPHPDate(strtotime($entry['created_at'])));
+
+                    $ret[] = $tx;
+                }
+            } while ($after_cursor != '');
+        }
+        return $ret;
     }
 
     public function supportedCurrencyPairs()
