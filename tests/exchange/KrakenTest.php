@@ -21,6 +21,7 @@ use CryptoMarket\Exchange\Kraken;
 
 use CryptoMarket\Record\CurrencyPair;
 use CryptoMarket\Record\TradingRole;
+use CryptoMarket\Record\Transaction;
 
 class KrakenTest extends TestCase
 {
@@ -118,6 +119,18 @@ class KrakenTest extends TestCase
         $this->assertFalse($this->mkt->isOrderOpen($res));
         $oe = $this->mkt->getOrderExecutions($res);
         $this->assertTrue(count($oe) > 1);
+    }
+
+    public function testTransactions()
+    {
+        $this->assertTrue($this->mkt instanceof Kraken);
+        $transactions = $this->mkt->transactions();
+        $this->assertNotEmpty($transactions);
+        foreach ($transactions as $trans) {
+            $this->assertEquals("Kraken", $trans->exchange);
+            $this->assertTrue($trans instanceof Transaction);
+            $this->assertTrue($trans->isValid());
+        }
     }
 
     private function checkAndCancelOrder($response)

@@ -20,6 +20,8 @@ use CryptoMarket\Record\OrderType;
 use CryptoMarket\Record\Ticker;
 use CryptoMarket\Record\Trade;
 use CryptoMarket\Record\TradingRole;
+use CryptoMarket\Record\Transaction;
+use CryptoMarket\Record\TransactionType;
 
 use MongoDB\BSON\UTCDateTime;
 
@@ -37,6 +39,7 @@ class Kraken extends BaseExchange implements ILifecycleHandler
     private $nonceFactory;
 
     private $currencyMapping = array();
+    private $krakenCurrencyMapping = array(); // maps kraken name -> our name
     private $marketMapping = array(); //maps our name -> kraken name
     private $krakenMarketMapping = array(); //maps kraken name -> our name
 
@@ -54,17 +57,16 @@ class Kraken extends BaseExchange implements ILifecycleHandler
 
     function init()
     {
-        $krakenCurrencyMapping = array();
-
         $curr = $this->publicQuery('Assets');
         foreach($curr as $krakenName => $currencyInfo)
         {
             $altName = $currencyInfo['altname'];
-            if($altName == 'XBT')
+            if ($altName == 'XBT') {
                 $altName = Currency::BTC;
+            }
 
             $this->currencyMapping[$altName] = $krakenName;
-            $krakenCurrencyMapping[$krakenName] = $altName;
+            $this->krakenCurrencyMapping[$krakenName] = $altName;
         }
 
         $this->feeSchedule = new FeeSchedule();
@@ -77,8 +79,8 @@ class Kraken extends BaseExchange implements ILifecycleHandler
             $krakenBase = $krakenPairInfo['base'];
             $krakenQuote = $krakenPairInfo['quote'];
 
-            $base = $krakenCurrencyMapping[$krakenBase];
-            $quote = $krakenCurrencyMapping[$krakenQuote];
+            $base = $this->krakenCurrencyMapping[$krakenBase];
+            $quote = $this->krakenCurrencyMapping[$krakenQuote];
             $pair = CurrencyPair::MakePair($base, $quote);
 
             $this->supportedPairs[] = $pair;
@@ -117,7 +119,6 @@ class Kraken extends BaseExchange implements ILifecycleHandler
                 }
             }
             $this->feeSchedule->addPairFees($pair, $pairSchedule);
-
         }
     }
 
@@ -176,9 +177,39 @@ class Kraken extends BaseExchange implements ILifecycleHandler
         }
     }
 
+    private function createTransaction($ledgerItem)
+    {
+        $tx = new Transaction();
+        $tx->exchange = $this->Name();
+        $tx->id = $ledgerItem['refid'];
+        if ($ledgerItem['type'] == 'deposit') {
+            $tx->type = TransactionType::Credit;
+        } else if ($ledgerItem['type'] == 'withdrawal') {
+            $tx->type = TransactionType::Debit;
+        }
+        $tx->amount = floatval($ledgerItem['amount']);
+        $tx->currency = $this->krakenCurrencyMapping[$ledgerItem['asset']];
+        $tx->timestamp = new UTCDateTime(MongoHelper::mongoDateOfPHPDate($ledgerItem['time']));
+        return $tx;
+    }
+
     public function transactions()
     {
-        // TODO: Implement transactions() method.
+        $ret = array();
+
+        $depositType = array('type' => 'deposit');
+        $depositLedger = $this->privateQuery('Ledgers', $depositType);
+        foreach ($depositLedger['ledger'] as $id=>$item) {
+            $ret[] = $this->createTransaction($item);
+        }
+
+        $withdrawalType = array('type' => 'withdrawal');
+        $withdrawalLedger = $this->privateQuery('Ledgers', $withdrawalType);
+        foreach ($withdrawalLedger['ledger'] as $id=>$item) {
+            $ret[] = $this->createTransaction($item);
+        }
+
+        return $ret;
     }
 
     public function supportedCurrencyPairs()
