@@ -26,6 +26,8 @@ use CryptoMarket\Record\OrderType;
 use CryptoMarket\Record\Ticker;
 use CryptoMarket\Record\Trade;
 use CryptoMarket\Record\TradingRole;
+use CryptoMarket\Record\Transaction;
+use CryptoMarket\Record\TransactionType;
 
 use MongoDB\BSON\UTCDateTime;
 
@@ -132,9 +134,35 @@ class Poloniex extends BaseExchange implements ILifecycleHandler
         }
     }
 
+    private function makeTransaction($ledgerItem, $transType)
+    {
+        $tx = new Transaction();
+        $tx->exchange = $this->Name();
+        $tx->type = $transType;
+        $tx->id = $ledgerItem['txid'];
+        $tx->currency = $ledgerItem['currency'];
+        $tx->amount = floatval($ledgerItem['amount']);
+        $tx->timestamp = new UTCDateTime(MongoHelper::mongoDateOfPHPDate($ledgerItem['timestamp']));
+        return $tx;
+    }
+
     public function transactions()
     {
-        // TODO: Implement transactions() method.
+        $ret = array();
+        $ledger = $this->query(array('command' => 'returnDepositsWithdrawals',
+            'start' => 0,
+            'end' => time()));
+        foreach ($ledger['deposits'] as $item) {
+            if ($item['status'] == 'COMPLETE') {
+                $ret[] = $this->makeTransaction($item, TransactionType::Credit);
+            }
+        }
+        foreach ($ledger['withdrawals'] as $item) {
+            if ($item['status'] == 'COMPLETE') {
+                $ret[] = $this->makeTransaction($item, TransactionType::Debit);
+            }
+        }
+        return $ret;
     }
 
     /**

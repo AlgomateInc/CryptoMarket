@@ -21,6 +21,7 @@ use CryptoMarket\Exchange\Poloniex;
 
 use CryptoMarket\Record\CurrencyPair;
 use CryptoMarket\Record\TradingRole;
+use CryptoMarket\Record\Transaction;
 
 class PoloniexTest extends TestCase
 {
@@ -174,6 +175,18 @@ class PoloniexTest extends TestCase
         $this->assertTrue($this->mkt instanceof Poloniex);
         $res = $this->mkt->trades(CurrencyPair::XCPBTC, time()-600);
         $this->assertNotNull($res);
+    }
+
+    public function testTransactions()
+    {
+        $this->assertTrue($this->mkt instanceof Poloniex);
+        $transactions = $this->mkt->transactions();
+        $this->assertNotEmpty($transactions);
+        foreach ($transactions as $trans) {
+            $this->assertEquals("Poloniex", $trans->exchange);
+            $this->assertTrue($trans instanceof Transaction);
+            $this->assertTrue($trans->isValid());
+        }
     }
 
     private function checkAndCancelOrder($response)
