@@ -9,6 +9,22 @@
 
 namespace CryptoMarket\Exchange;
 
+use CryptoMarket\Helper\MongoHelper;
+
+use CryptoMarket\Exchange\BaseExchange;
+
+use CryptoMarket\Record\CurrencyPair;
+use CryptoMarket\Record\FeeSchedule;
+use CryptoMarket\Record\OrderBook;
+use CryptoMarket\Record\OrderType;
+use CryptoMarket\Record\Ticker;
+use CryptoMarket\Record\Trade;
+use CryptoMarket\Record\TradingRole;
+use CryptoMarket\Record\Transaction;
+use CryptoMarket\Record\TransactionType;
+
+use MongoDB\BSON\UTCDateTime;
+
 class StaticMarket extends BaseExchange
 {
     private $validOrderIdList = array();
@@ -30,7 +46,19 @@ class StaticMarket extends BaseExchange
 
     public function transactions()
     {
-        // TODO: Implement transactions() method.
+        $ret = array();
+        
+        $tx = new Transaction();
+        $tx->exchange = $this->Name();
+        $tx->id = 'somelongid';
+        $tx->type = TransactionType::Credit;
+        $tx->currency = CurrencyPair::BTCUSD;
+        $tx->amount = 20.0;
+        $tx->timestamp = new UTCDateTime();
+
+        $ret[] = $tx;
+
+        return $ret;
     }
 
     /**
