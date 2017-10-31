@@ -28,7 +28,7 @@ class PoloniexTest extends TestCase
     protected $mkt;
     public function setUp()
     {
-        error_reporting(error_reporting() ^ E_NOTICE);
+        error_reporting(error_reporting() ^ E_ALL);
         date_default_timezone_set('UTC');
 
         $cal = new ConfigAccountLoader(ConfigData::ACCOUNTS_CONFIG);
@@ -135,7 +135,6 @@ class PoloniexTest extends TestCase
             $this->assertNotNull($taker);
             $maker = $schedule->getFee($pair, TradingRole::Maker);
             $this->assertNotNull($maker);
-            sleep(1);
         }
     }
 

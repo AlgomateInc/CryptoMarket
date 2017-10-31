@@ -37,6 +37,25 @@ class BitfinexTest extends TestCase
         $this->mkt->init();
     }
 
+    public function testTickers()
+    {
+        $this->assertTrue($this->mkt instanceof Bitfinex);
+        $tickers = $this->mkt->tickers();
+        $supportedPairs = $this->mkt->supportedCurrencyPairs();
+        foreach ($supportedPairs as $pair) {
+            $found = false;
+            foreach ($tickers as $ticker) {
+                if ($ticker->currencyPair == $pair) {
+                    $found = true;
+                }
+            }
+            $this->assertTrue($found);
+        }
+        foreach ($tickers as $ticker) {
+            $this->assertTrue(in_array($ticker->currencyPair, $supportedPairs));
+        }
+    }
+
     public function testPrecision()
     {
         $this->assertTrue($this->mkt instanceof Bitfinex);
@@ -93,11 +112,8 @@ class BitfinexTest extends TestCase
     {
         $this->assertTrue($this->mkt instanceof Bitfinex);
         $this->assertEquals('0.2', $this->mkt->tradingFee(CurrencyPair::BTCUSD, TradingRole::Taker, 0.0));
-        sleep(1);
         $this->assertEquals('0.08', $this->mkt->tradingFee(CurrencyPair::BTCUSD, TradingRole::Maker, 5.0e5));
-        sleep(1);
         $this->assertEquals('0.1', $this->mkt->currentTradingFee(CurrencyPair::BTCUSD, TradingRole::Maker));
-        sleep(1);
         $this->assertEquals('0.2', $this->mkt->currentTradingFee(CurrencyPair::BTCUSD, TradingRole::Taker));
     }
 

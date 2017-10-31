@@ -183,6 +183,36 @@ class Bitfinex extends BaseExchange implements IMarginExchange, ILifecycleHandle
         return $t;
     }
 
+    private function bitfinexTicker($pair)
+    {
+        return 't' . $pair;
+    }
+
+    private function normalTicker($bitfinexTicker)
+    {
+        return substr($bitfinexTicker, 1);
+    }
+
+    public function tickers()
+    {
+        $tickers = [];
+        $raw = CurlHelper::query($this->getV2ApiUrl() . 'tickers?symbols=t' . join(',t', $this->supportedCurrencyPairs()));
+        foreach ($raw as $ticker) {
+            // Data format goes: 0 SYMBOL, 1 BID, 2 BID_SIZE, 3 ASK, 4 ASK_SIZE,
+            // 5 DAILY_CHANGE, 6 DAILY_CHANGE_PERC, 7 LAST_PRICE, 8 VOLUME, 
+            // 9 HIGH, 10 LOW
+            $t = new Ticker();
+            $t->currencyPair = $this->normalTicker($ticker[0]);
+            $t->bid = $ticker[1];
+            $t->ask = $ticker[3];
+            $t->last = $ticker[7];
+            $t->volume = $ticker[8];
+
+            $tickers[] = $t;
+        }
+        return $tickers;
+    }
+
     public function trades($pair, $sinceDate)
     {
         $tradeList = CurlHelper::query($this->getApiUrl() . 'trades' . '/' . $pair . "?timestamp=$sinceDate");
@@ -409,9 +439,14 @@ class Bitfinex extends BaseExchange implements IMarginExchange, ILifecycleHandle
         return $retList;
     }
 
-    function getApiUrl()
+    private function getApiUrl()
     {
         return 'https://api.bitfinex.com/v1/';
+    }
+
+    private function getV2ApiUrl()
+    {
+        return 'https://api.bitfinex.com/v2/';
     }
 
     public function getOrderID($orderResponse)

@@ -116,8 +116,14 @@ class Poloniex extends BaseExchange implements ILifecycleHandler
     {
         $feeSchedule = new FeeSchedule();
         $feeInfo = $this->query(array('command' => 'returnFeeInfo'));
-        $takerFee = bcmul($feeInfo['takerFee'], '100', 4);
-        $makerFee = bcmul($feeInfo['makerFee'], '100', 4);
+        $takerFee = 0.0;
+        $makerFee = 0.0;
+        if (array_key_exists('takerFee', $feeInfo)) {
+            $takerFee = bcmul($feeInfo['takerFee'], '100', 4);
+        }
+        if (array_key_exists('makerFee', $feeInfo)) {
+            $makerFee = bcmul($feeInfo['makerFee'], '100', 4);
+        }
         foreach ($this->supportedCurrencyPairs() as $pair) {
             $feeSchedule->addPairFee($pair, $takerFee, $makerFee);
         }
@@ -126,12 +132,14 @@ class Poloniex extends BaseExchange implements ILifecycleHandler
 
     public function currentTradingFee($pair, $tradingRole)
     {
+        $fee = 0.0;
         $feeInfo = $this->query(array('command' => 'returnFeeInfo'));
         if ($tradingRole == TradingRole::Maker) {
-            return floatval($feeInfo['makerFee']) * 100.0;
+            $fee = floatval($feeInfo['makerFee']) * 100.0;
         } else if ($tradingRole == TradingRole::Taker) {
-            return floatval($feeInfo['takerFee']) * 100.0;
+            $fee = floatval($feeInfo['takerFee']) * 100.0;
         }
+        return $fee;
     }
 
     private function makeTransaction($ledgerItem, $transType)
