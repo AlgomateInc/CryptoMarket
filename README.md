@@ -1,6 +1,29 @@
 # CryptoMarket
 PHP package defining a unified interface for interacting with cryptocurrency exchanges
 
+# Sample Usage
+
+## Connecting to an exchange
+
+```php
+$kraken = new Kraken('mykey', 'mysecret');
+$kraken->init();
+// get currency pairs
+$krakenPairs = $kraken->supportedCurrencyPairs();
+
+foreach ($krakenPairs as $pair) {
+  // get mkt data
+  $tickerData = $kraken->ticker($pair);
+
+  // buy anything less than 1000
+  if ($tickerData->ask < 1000.0) {
+    $kraken->buy($pair, 1.0, $tickerData->ask);
+  }
+}
+```
+
+## Connecting to multiple exchanges
+
 # Installing
 
 ## Composer
@@ -21,12 +44,12 @@ setup the basic ConfigData, run:
     $ sed -i "s#ConfigDataExample#ConfigData#" tests/ConfigData.php
     $ composer dumpautoload
 
-Note: For saftey, ConfigData.php is in .gitignore, so your API keys will 
+Note: For safety, ConfigData.php is in .gitignore, so your API keys will 
 not be accidentally checked in.
 
 ## Test setup
 
-From there, run the smoke tests to make sure everything is setup:
+From there, run the smoke tests from the top directory to ensure proper setup:
 
     $ ./vendor/bin/phpunit tests/SmokeTest.php
 
@@ -43,12 +66,12 @@ IAccountLoader and then use its "getAccounts" function, providing an array of
 
   * Bitfinex
   * Bitstamp
-  * Btce
+  * Btc-e (RIP)
   * GDAX
   * Gemini
   * Kraken
   * Poloniex
-  * Yunbi
+  * Yunbi (RIP)
 
 ## IAccountLoader Implementations
 
@@ -59,32 +82,59 @@ Currently, there are two implementations of IAccountLoader:
 
 ## Using ConfigAccountLoader
 
-  * Add keys, secrets, and additional information to the ACCOUNTS_CONFIG section
-  in tests/ConfigData.php for desired exchanges
-  * Instantiate ConfigAccountLoader with ConfigData::ACCOUNTS_CONFIG
-  * Call "getAccounts"
+  * Add keys, secrets, and additional information to the `ACCOUNTS_CONFIG` section
+  in tests/ConfigData.php for desired exchanges, e.g.
+
+```php
+class ConfigData {
+  const ACCOUNTS_CONFIG = [
+    'Kraken'=> [
+      'key' => 'mykey',
+    'secret' => 'mysecret'
+    ];
+}
+```
+
+  * Instantiate `ConfigAccountLoader` with `ConfigData::ACCOUNTS_CONFIG` and call "getAccounts"
+
+```php
+$accountLoader =
+new ConfigAccountLoader(ConfigData::ACCOUNTS_CONFIG);
+$allExchanges = $accountLoader->getAccounts();
+
+$kraken = $allExchanges[ExchangeName::Kraken]; // get one
+
+foreach ($allExchanges as $exchange) { // all exchanges
+  $btcusd = $exchange->ticker(CurrencyPair::BTCUSD);
+  // do stuff with BTCUSD
+}
+```
 
 ## Using MongoAccountLoader
 
-  * Add MONGODB_URI and MONGODB_NAME to tests/ConfigData.php
+  * Add `MONGODB_URI` and `MONGODB_NAME` to tests/ConfigData.php
   * Add entries to the "servers" collection using the following document format:
-  {
-    'ServerName': 'xxxxxxxx', // any user-defined name, used to construct MongoAccountLoader
-    'ExchangeSettings': [
-      {
-        'Name': 'SomeExchangeName', // see Record::ExchangeName for supported names
-        'Settings': { // all key->value pairs to be passed into Exchange, e.g:
-          'key': 'xxxxxxxxxxx',
-          'secret': 'xxxxxxxxxxxxx',
-        }
-      },
-      // all other exchanges follow
-    ]
-  }
+
+```json
+{
+  'ServerName': 'xxxxxxxx', // any user-defined name, used to construct MongoAccountLoader
+  'ExchangeSettings': [
+    {
+      'Name': 'SomeExchangeName', // see Record::ExchangeName for supported names
+      'Settings': { // all key->value pairs to be passed into Exchange, e.g:
+        'key': 'xxxxxxxxxxx',
+        'secret': 'xxxxxxxxxxxxx',
+      }
+    },
+    // all other exchanges follow
+  ]
+}
+```
+
   * Instantiate MongoAccountLoader with the following:
-    - ConfigData::MONGODB_URI
-    - ConfigData::MONGODB_DBNAME
-    - ConfigData::ACCOUNTS_CONFIG
+    - `ConfigData::MONGODB_URI`
+    - `ConfigData::MONGODB_DBNAME`
+    - `ConfigData::ACCOUNTS_CONFIG`
     - "ServerName" specified in the previous step
   * Call "getAccounts"
 
@@ -94,6 +144,17 @@ All tests already include /vendor/autoload.php, so tests can be run using phpuni
 found in the vendor directory, e.g.:
 
     $ ./vendor/bin/phpunit tests/exchange/BitfinexTest.php
+
+# Docker container
+
+A Docker container is provided on the tag [joncinque/cryptomarket](https://hub.docker.com/r/joncinque/cryptomarket/).
+Sample command to run a test file:
+
+```bash
+$ docker run --entrypoint /dockervolume/vendor/bin/phpunit \
+    -v /myvolume/:/dockervolume -it joncinque/cryptomarket \
+    --include-path /dockervolume /dockervolume/tests/SmokeTest.php
+```
     
 # Code Contributions
 
