@@ -27,9 +27,11 @@ use CryptoMarket\Record\Transaction;
 class BitfinexTest extends TestCase
 {
     protected $mkt;
-    public function setUp()
+
+    public function __construct()
     {
-        error_reporting(error_reporting() ^ E_NOTICE);
+        error_reporting(E_ALL);
+        parent::__construct();
 
         $cal = new ConfigAccountLoader(ConfigData::ACCOUNTS_CONFIG);
         $exchanges = $cal->getAccounts(array(ExchangeName::Bitfinex));
@@ -64,7 +66,6 @@ class BitfinexTest extends TestCase
         $this->assertEquals(5, $this->mkt->quotePrecision($pair, 0.1));
         $this->assertEquals(1, $this->mkt->quotePrecision($pair, 1000.0));
         $this->assertEquals(-2, $this->mkt->quotePrecision($pair, 1000000.0));
-        sleep(1);
     }
 
     public function testBalances()
@@ -72,7 +73,6 @@ class BitfinexTest extends TestCase
         $ret = $this->mkt->balances();
 
         $this->assertNotEmpty($ret);
-        sleep(1);
     }
 
     public function testMinOrders()
@@ -86,13 +86,13 @@ class BitfinexTest extends TestCase
 
             $ret = $this->mkt->buy($pair, $minOrder, $price);
             $this->checkAndCancelOrder($ret);
-            sleep(1);
         }
     }
 
     public function testBasePrecision()
     {
         $this->assertTrue($this->mkt instanceof Bitfinex);
+        $this->markTestSkipped();
         foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
             $ticker = $this->mkt->ticker($pair);
             $quotePrecision = $this->mkt->quotePrecision($pair, $ticker->bid);
@@ -104,7 +104,6 @@ class BitfinexTest extends TestCase
 
             $ret = $this->mkt->buy($pair, $minOrder, $price);
             $this->checkAndCancelOrder($ret);
-            sleep(1);
         }
     }
 
@@ -126,7 +125,6 @@ class BitfinexTest extends TestCase
             $this->assertNotNull($taker);
             $maker = $schedule->getFee($pair, TradingRole::Maker);
             $this->assertNotNull($maker);
-            sleep(1);
         }
     }
 
@@ -186,7 +184,6 @@ class BitfinexTest extends TestCase
         $this->assertTrue($this->mkt->isOrderOpen($response));
 
         $this->assertNotNull($this->mkt->cancel($response['order_id']));
-        sleep(1);
         $this->assertFalse($this->mkt->isOrderOpen($response));
     }
 }

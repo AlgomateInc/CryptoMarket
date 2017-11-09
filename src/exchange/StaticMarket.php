@@ -9,7 +9,7 @@
 
 namespace CryptoMarket\Exchange;
 
-use CryptoMarket\Helper\MongoHelper;
+use CryptoMarket\Helper\DateHelper;
 
 use CryptoMarket\Exchange\BaseExchange;
 

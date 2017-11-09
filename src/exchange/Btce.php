@@ -3,7 +3,7 @@
 namespace CryptoMarket\Exchange;
 
 use CryptoMarket\Helper\CurlHelper;
-use CryptoMarket\Helper\MongoHelper;
+use CryptoMarket\Helper\DateHelper;
 
 use CryptoMarket\Exchange\BtceStyleExchange;
 use CryptoMarket\Exchange\ExchangeName;
@@ -268,7 +268,7 @@ class Btce extends BtceStyleExchange implements ILifecycleHandler
             $tx->type = ($btx['type'] == 1)? TransactionType::Credit: TransactionType::Debit;
             $tx->currency = $btx['currency'];
             $tx->amount = $btx['amount'];
-            $tx->timestamp = new UTCDateTime(MongoHelper::mongoDateOfPHPDate($btx['timestamp']));
+            $tx->timestamp = new UTCDateTime(DateHelper::mongoDateOfPHPDate($btx['timestamp']));
 
             $ret[] = $tx;
         }

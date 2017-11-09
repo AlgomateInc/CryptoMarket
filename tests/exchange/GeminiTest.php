@@ -25,14 +25,20 @@ use CryptoMarket\Record\TradingRole;
 class GeminiTest extends TestCase
 {
     protected $mkt;
-    public function setUp()
+
+    public function __construct()
     {
-        error_reporting(error_reporting() ^ E_NOTICE);
+        parent::__construct();
 
         $cal = new ConfigAccountLoader(ConfigData::ACCOUNTS_CONFIG);
         $exchanges = $cal->getAccounts(array(ExchangeName::Gemini));
         $this->mkt = $exchanges[ExchangeName::Gemini];
         $this->mkt->init();
+    }
+
+    public function setUp()
+    {
+        error_reporting(error_reporting() ^ E_NOTICE);
     }
 
     public function testPrecisions()

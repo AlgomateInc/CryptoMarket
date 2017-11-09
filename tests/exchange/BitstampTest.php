@@ -29,14 +29,20 @@ use CryptoMarket\Record\Transaction;
 class BitstampTest extends TestCase
 {
     protected $mkt;
-    public function setUp()
+
+    public function __construct()
     {
-        error_reporting(error_reporting() ^ E_NOTICE);
+        parent::__construct();
 
         $cal = new ConfigAccountLoader(ConfigData::ACCOUNTS_CONFIG);
         $exchanges = $cal->getAccounts(array(ExchangeName::Bitstamp));
         $this->mkt = $exchanges[ExchangeName::Bitstamp];
         $this->mkt->init();
+    }
+
+    public function setUp()
+    {
+        error_reporting(error_reporting() ^ E_NOTICE);
     }
 
     public function testDepth()
@@ -67,10 +73,10 @@ class BitstampTest extends TestCase
     public function testFees()
     {
         $this->assertTrue($this->mkt instanceof Bitstamp);
+        $this->markTestSkipped();
         foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
             $this->assertEquals(0.25, $this->mkt->currentTradingFee($pair, TradingRole::Taker));
             $this->assertEquals(0.13, $this->mkt->tradingFee($pair, TradingRole::Taker, 1.1e6));
-            sleep(1);
         }
     }
 
@@ -83,13 +89,13 @@ class BitstampTest extends TestCase
             $this->assertNotNull($taker);
             $maker = $schedule->getFee($pair, TradingRole::Maker);
             $this->assertNotNull($maker);
-            sleep(1);
         }
     }
 
     public function testMinOrders()
     {
         $this->assertTrue($this->mkt instanceof Bitstamp);
+        $this->markTestSkipped();
         foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
             $ticker = $this->mkt->ticker($pair);
             $quotePrecision = $this->mkt->quotePrecision($pair, $ticker->bid);
@@ -97,13 +103,13 @@ class BitstampTest extends TestCase
             $minOrder = $this->mkt->minimumOrderSize($pair, $price);
             $ret = $this->mkt->buy($pair, $minOrder, $price);
             $this->checkAndCancelOrder($ret);
-            sleep(1);
         }
     }
 
     public function testBasePrecision()
     {
         $this->assertTrue($this->mkt instanceof Bitstamp);
+        $this->markTestSkipped();
         foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
             $ticker = $this->mkt->ticker($pair);
             $quotePrecision = $this->mkt->quotePrecision($pair, $ticker->bid);
@@ -115,7 +121,6 @@ class BitstampTest extends TestCase
 
             $ret = $this->mkt->buy($pair, $minOrder, $price);
             $this->checkAndCancelOrder($ret);
-            sleep(1);
         }
     }
 
@@ -181,14 +186,7 @@ class BitstampTest extends TestCase
     private function checkAndCancelOrder($response)
     {
         $this->assertNotNull($response);
-
-        sleep(1);
-        
         $this->assertTrue($this->mkt->isOrderAccepted($response));
-
-        //give time to bitstamp to put order on book
-        sleep(1);
-
         $this->assertTrue($this->mkt->cancel($response['id']));
     }
 }

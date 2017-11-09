@@ -3,7 +3,7 @@
 namespace CryptoMarket\Exchange;
 
 use CryptoMarket\Helper\CurlHelper;
-use CryptoMarket\Helper\MongoHelper;
+use CryptoMarket\Helper\DateHelper;
 
 use CryptoMarket\Exchange\BaseExchange;
 use CryptoMarket\Exchange\ILifecycleHandler;
@@ -37,6 +37,12 @@ class Gdax extends BaseExchange implements ILifecycleHandler
     private $secret;
     private $passphrase;
 
+    private $lastPublicCall;
+    const PUBLIC_THROTTLE = 3333333; // in microseconds
+
+    private $lastPrivateCall;
+    const PRIVATE_THROTTLE = 2000000; // in microseconds
+
     private $supportedPairs = array();
     private $minOrderSizes = array(); //assoc array pair->minordersize
     private $productIds = array(); //assoc array pair->productid
@@ -61,6 +67,10 @@ class Gdax extends BaseExchange implements ILifecycleHandler
 
         $this->feeSchedule = new FeeSchedule();
         $this->feeSchedule->setFallbackFees($genericFeeSchedule);
+
+        $now = DateHelper::totalMicrotime();
+        $this->lastPublicCall = $now;
+        $this->lastPrivateCall = $now;
     }
 
     function init()
@@ -75,7 +85,7 @@ class Gdax extends BaseExchange implements ILifecycleHandler
         $ethFeeSchedule->push(new FeeScheduleItem(10.0, 20.0, 0.15, 0.0));
         $ethFeeSchedule->push(new FeeScheduleItem(20.0, INF, 0.10, 0.0));
 
-        $pairs = CurlHelper::query($this->getApiUrl() . '/products');
+        $pairs = $this->publicQuery('/products');
         foreach($pairs as $pairInfo){
             try{
                 $pair = $pairInfo['base_currency'] . $pairInfo['quote_currency'];
@@ -127,9 +137,9 @@ class Gdax extends BaseExchange implements ILifecycleHandler
         $FORMAT = "Y-m-d";
         $nowTs = date($FORMAT, time());
         $prevTs = date($FORMAT, time() - $SECONDS_PER_THIRTY);
-        $query = $this->getApiUrl() . '/products/' . $this->productIds[$pair] . 
+        $query = '/products/' . $this->productIds[$pair] . 
             "/candles?start=$prevTs&end=$nowTs&granularity=$SECONDS_PER_TEN";
-        $candles = CurlHelper::query($query);
+        $candles = $this->publicQuery($query);
         $totalVolume = 0.0;
         foreach ($candles as $candle){
             $totalVolume += $candle[5];
@@ -220,7 +230,7 @@ class Gdax extends BaseExchange implements ILifecycleHandler
                         $tx->currency = $curr;
                         $tx->amount = $amount;
                     }
-                    $tx->timestamp = new UTCDateTime(MongoHelper::mongoDateOfPHPDate(strtotime($entry['created_at'])));
+                    $tx->timestamp = new UTCDateTime(DateHelper::mongoDateOfPHPDate(strtotime($entry['created_at'])));
 
                     $ret[] = $tx;
                 }
@@ -257,7 +267,7 @@ class Gdax extends BaseExchange implements ILifecycleHandler
 
     public function ticker($pair)
     {
-        $raw = CurlHelper::query($this->getApiUrl() . '/products/' . $this->productIds[$pair] . '/ticker');
+        $raw = $this->publicQuery('/products/' . $this->productIds[$pair] . '/ticker');
 
         $t = new Ticker();
         $t->currencyPair = $pair;
@@ -271,7 +281,7 @@ class Gdax extends BaseExchange implements ILifecycleHandler
 
     public function trades($pair, $sinceDate)
     {
-        $tradeList = CurlHelper::query($this->getApiUrl() . '/products/' . $this->productIds[$pair] . '/trades');
+        $tradeList = $this->publicQuery('/products/' . $this->productIds[$pair] . '/trades');
 
         $ret = array();
 
@@ -297,7 +307,7 @@ class Gdax extends BaseExchange implements ILifecycleHandler
 
     public function depth($currencyPair)
     {
-        $raw = CurlHelper::query($this->getApiUrl() . '/products/' . $this->productIds[$currencyPair] .
+        $raw = $this->publicQuery('/products/' . $this->productIds[$currencyPair] .
             '/book?level=2');
 
         $book = new OrderBook($raw);
@@ -398,7 +408,7 @@ class Gdax extends BaseExchange implements ILifecycleHandler
                     $exec->orderId = $fill['order_id'];
                     $exec->quantity = $fill['size'];
                     $exec->price = $fill['price'];
-                    $exec->timestamp = new UTCDateTime(MongoHelper::mongoDateOfPHPDate(strtotime($fill['created_at'])));
+                    $exec->timestamp = new UTCDateTime(DateHelper::mongoDateOfPHPDate(strtotime($fill['created_at'])));
 
                     $ret[] = $exec;
                 }
@@ -434,7 +444,7 @@ class Gdax extends BaseExchange implements ILifecycleHandler
                 $td->orderType = ($order['side'] == 'sell')? OrderType::SELL : OrderType::BUY;
                 $td->price = $order['price'];
                 $td->quantity = $order['size'];
-                $td->timestamp = new UTCDateTime(MongoHelper::mongoDateOfPHPDate(strtotime($order['created_at'])));
+                $td->timestamp = new UTCDateTime(DateHelper::mongoDateOfPHPDate(strtotime($order['created_at'])));
 
                 $ret[] = $td;
                 $num_fetched += 1;
@@ -463,6 +473,11 @@ class Gdax extends BaseExchange implements ILifecycleHandler
         return base64_encode(hash_hmac("sha256", $what, base64_decode($this->secret), true));
     }
 
+    private function publicQuery($request_path) {
+        $this->lastPublicCall = $this->throttleQuery($this->lastPublicCall, self::PUBLIC_THROTTLE);
+        return CurlHelper::query($this->getApiUrl() . $request_path);
+    }
+
     private function authQuery($request_path, $method='GET', $body='', $return_headers=false) {
         $ts = time();
         $body = is_array($body) ? json_encode($body) : $body;
@@ -476,6 +491,7 @@ class Gdax extends BaseExchange implements ILifecycleHandler
             'CB-ACCESS-PASSPHRASE: ' . $this->passphrase
         );
 
+        $this->lastPrivateCall = $this->throttleQuery($this->lastPrivateCall, self::PRIVATE_THROTTLE);
         return CurlHelper::query($this->getApiUrl() . $request_path, $body, $headers, $method, $return_headers);
     }
 

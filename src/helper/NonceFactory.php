@@ -6,7 +6,9 @@
  * Time: 10:19 AM
  */
 
-namespace CryptoMarket\Exchange;
+namespace CryptoMarket\Helper;
+
+use CryptoMarket\Helper\DateHelper;
 
 class NonceFactory {
 
@@ -14,8 +16,7 @@ class NonceFactory {
     private $nonce = 0;
 
     public function __construct(){
-        $mt = explode(' ', microtime());
-        $this->noncetime = $mt[1];
+        $this->noncetime = intval(DateHelper::totalMicrotime());
     }
 
     public function get(){

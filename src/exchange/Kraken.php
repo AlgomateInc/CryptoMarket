@@ -3,11 +3,11 @@
 namespace CryptoMarket\Exchange;
 
 use CryptoMarket\Helper\CurlHelper;
-use CryptoMarket\Helper\MongoHelper;
+use CryptoMarket\Helper\DateHelper;
+use CryptoMarket\Helper\NonceFactory;
 
 use CryptoMarket\Exchange\BaseExchange;
 use CryptoMarket\Exchange\ILifecycleHandler;
-use CryptoMarket\Exchange\NonceFactory;
 
 use CryptoMarket\Record\Currency;
 use CryptoMarket\Record\CurrencyPair;
@@ -48,16 +48,21 @@ class Kraken extends BaseExchange implements ILifecycleHandler
     private $quotePrecisions = array(); //maps pair -> precision
     private $feeSchedule;
 
+    private $lastCall;
+    const THROTTLE = 3000000;
+    const ORDER_THROTTLE = 1000000;
+
     public function __construct($key, $secret){
         $this->key = $key;
         $this->secret = $secret;
 
         $this->nonceFactory = new NonceFactory();
+        $this->lastCall = DateHelper::totalMicrotime();
     }
 
     function init()
     {
-        $curr = $this->publicQuery('Assets');
+        $curr = $this->publicQuery('Assets', null, array(), false);
         foreach($curr as $krakenName => $currencyInfo)
         {
             $altName = $currencyInfo['altname'];
@@ -70,7 +75,7 @@ class Kraken extends BaseExchange implements ILifecycleHandler
         }
 
         $this->feeSchedule = new FeeSchedule();
-        $assetPairs = $this->publicQuery('AssetPairs');
+        $assetPairs = $this->publicQuery('AssetPairs', null, array(), false);
         foreach ($assetPairs as $krakenPairName => $krakenPairInfo)
         {
             if(mb_substr($krakenPairName, -2) === '.d')
@@ -189,7 +194,7 @@ class Kraken extends BaseExchange implements ILifecycleHandler
         }
         $tx->amount = floatval($ledgerItem['amount']);
         $tx->currency = $this->krakenCurrencyMapping[$ledgerItem['asset']];
-        $tx->timestamp = new UTCDateTime(MongoHelper::mongoDateOfPHPDate($ledgerItem['time']));
+        $tx->timestamp = new UTCDateTime(DateHelper::mongoDateOfPHPDate($ledgerItem['time']));
         return $tx;
     }
 
@@ -247,53 +252,6 @@ class Kraken extends BaseExchange implements ILifecycleHandler
         return $this->quotePrecisions[$pair];
     }
 
-    private function getApiUrl()
-    {
-        return 'https://api.kraken.com/' . $this->getApiVersion() . '/';
-    }
-
-    private function getApiVersion()
-    {
-        return '0';
-    }
-
-    private function publicQuery($endpoint, $post_data = null, $headers = array())
-    {
-        $res = CurlHelper::query($this->getApiUrl() . 'public/' . $endpoint, $post_data, $headers);
-
-        return $this->assertSuccessResponse($res);
-    }
-
-    private function privateQuery($endpoint, $request = array())
-    {
-        if (!$this->nonceFactory instanceof NonceFactory)
-            throw new \Exception('No way to get nonce!');
-
-        $request['nonce'] = strval($this->nonceFactory->get());
-
-        // build the POST data string
-        $postdata = http_build_query($request, '', '&');
-
-        // set API key and sign the message
-        $path = '/' . $this->getApiVersion() . '/private/' . $endpoint;
-        $sign = hash_hmac('sha512', $path . hash('sha256', $request['nonce'] . $postdata, true), base64_decode($this->secret), true);
-        $headers = array(
-            'API-Key: ' . $this->key,
-            'API-Sign: ' . base64_encode($sign)
-        );
-
-        $res = CurlHelper::query($this->getApiUrl() . 'private/' . $endpoint, $postdata, $headers);
-
-        return $this->assertSuccessResponse($res);
-    }
-
-    protected function assertSuccessResponse($response)
-    {
-        if(count($response['error']) > 0)
-            throw new \Exception(json_encode($response['error']));
-
-        return $response['result'];
-    }
 
     public function ticker($pair)
     {
@@ -351,7 +309,7 @@ class Kraken extends BaseExchange implements ILifecycleHandler
             $t->tradeId = sha1($raw[0] . $raw[1] . $raw[2]);
             $t->price = (float) $raw[0];
             $t->quantity = (float) $raw[1];
-            $t->timestamp = new UTCDateTime(MongoHelper::mongoDateOfPHPDate($raw[2]));
+            $t->timestamp = new UTCDateTime(DateHelper::mongoDateOfPHPDate($raw[2]));
             $t->orderType = ($raw[3] == 'b')? OrderType::BUY : OrderType::SELL;
 
             $ret[] = $t;
@@ -468,6 +426,61 @@ class Kraken extends BaseExchange implements ILifecycleHandler
     public function getOrderID($orderResponse)
     {
         return $orderResponse['txid'][0];
+    }
+
+    private function getApiUrl()
+    {
+        return 'https://api.kraken.com/' . $this->getApiVersion() . '/';
+    }
+
+    private function getApiVersion()
+    {
+        return '0';
+    }
+
+    private function publicQuery($endpoint, $post_data = null, $headers = array(), $throttle = true)
+    {
+        if ($throttle) {
+            $this->lastCall = $this->throttleQuery($this->lastCall, self::THROTTLE);
+        }
+        $res = CurlHelper::query($this->getApiUrl() . 'public/' . $endpoint, $post_data, $headers);
+        return $this->assertSuccessResponse($res);
+    }
+
+    private function privateQuery($endpoint, $request = array())
+    {
+        if (!$this->nonceFactory instanceof NonceFactory)
+            throw new \Exception('No way to get nonce!');
+
+        $request['nonce'] = strval($this->nonceFactory->get());
+
+        // build the POST data string
+        $postdata = http_build_query($request, '', '&');
+
+        // set API key and sign the message
+        $path = '/' . $this->getApiVersion() . '/private/' . $endpoint;
+        $sign = hash_hmac('sha512', $path . hash('sha256', $request['nonce'] . $postdata, true), base64_decode($this->secret), true);
+        $headers = array(
+            'API-Key: ' . $this->key,
+            'API-Sign: ' . base64_encode($sign)
+        );
+
+        if (strpos(mb_strtolower($endpoint), 'order') !== false) {
+            $this->lastCall = $this->throttleQuery($this->lastCall, self::ORDER_THROTTLE);
+        } else {
+            $this->lastCall = $this->throttleQuery($this->lastCall, self::THROTTLE);
+        }
+        $res = CurlHelper::query($this->getApiUrl() . 'private/' . $endpoint, $postdata, $headers);
+
+        return $this->assertSuccessResponse($res);
+    }
+
+    protected function assertSuccessResponse($response)
+    {
+        if(count($response['error']) > 0)
+            throw new \Exception(json_encode($response['error']));
+
+        return $response['result'];
     }
 }
 

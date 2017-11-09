@@ -10,10 +10,10 @@
 namespace CryptoMarket\Exchange;
 
 use CryptoMarket\Helper\CurlHelper;
-use CryptoMarket\Helper\MongoHelper;
+use CryptoMarket\Helper\DateHelper;
+use CryptoMarket\Helper\NonceFactory;
 
 use CryptoMarket\Exchange\BaseExchange;
-use CryptoMarket\Exchange\NonceFactory;
 
 use CryptoMarket\Record\Currency;
 use CryptoMarket\Record\CurrencyPair;
@@ -43,6 +43,9 @@ class Poloniex extends BaseExchange implements ILifecycleHandler
     private $feeSchedule;
     private $supportedPairs;
 
+    private $lastCall;
+    const THROTTLE = 200000; // 5 calls / second
+
     public function __construct($key, $secret){
         $this->key = $key;
         $this->secret = $secret;
@@ -65,11 +68,12 @@ class Poloniex extends BaseExchange implements ILifecycleHandler
         $this->feeSchedule->setFallbackFees($fallbackSchedule);
 
         $this->supportedPairs = array();
+        $this->lastCall = DateHelper::totalMicrotime();
     }
 
     public function init()
     {
-        $tickers = CurlHelper::query($this->public_url.'?command=returnTicker');
+        $tickers = $this->publicQuery($this->public_url.'?command=returnTicker');
         foreach ($tickers as $pairName => $value) {
             $this->supportedPairs[] = $this->getStandardPairName($pairName);
         }
@@ -82,11 +86,7 @@ class Poloniex extends BaseExchange implements ILifecycleHandler
 
     public function balances()
     {
-        $bal = $this->query(
-            array(
-                'command' => 'returnBalances'
-            )
-        );
+        $bal = $this->privateQuery(array('command' => 'returnBalances'));
 
         $balances = array();
         foreach($this->supportedCurrencies() as $curr){
@@ -115,7 +115,7 @@ class Poloniex extends BaseExchange implements ILifecycleHandler
     public function currentFeeSchedule()
     {
         $feeSchedule = new FeeSchedule();
-        $feeInfo = $this->query(array('command' => 'returnFeeInfo'));
+        $feeInfo = $this->privateQuery(array('command' => 'returnFeeInfo'));
         $takerFee = 0.0;
         $makerFee = 0.0;
         if (array_key_exists('takerFee', $feeInfo)) {
@@ -133,7 +133,7 @@ class Poloniex extends BaseExchange implements ILifecycleHandler
     public function currentTradingFee($pair, $tradingRole)
     {
         $fee = 0.0;
-        $feeInfo = $this->query(array('command' => 'returnFeeInfo'));
+        $feeInfo = $this->privateQuery(array('command' => 'returnFeeInfo'));
         if ($tradingRole == TradingRole::Maker) {
             $fee = floatval($feeInfo['makerFee']) * 100.0;
         } else if ($tradingRole == TradingRole::Taker) {
@@ -150,14 +150,14 @@ class Poloniex extends BaseExchange implements ILifecycleHandler
         $tx->id = $ledgerItem['txid'];
         $tx->currency = $ledgerItem['currency'];
         $tx->amount = floatval($ledgerItem['amount']);
-        $tx->timestamp = new UTCDateTime(MongoHelper::mongoDateOfPHPDate($ledgerItem['timestamp']));
+        $tx->timestamp = new UTCDateTime(DateHelper::mongoDateOfPHPDate($ledgerItem['timestamp']));
         return $tx;
     }
 
     public function transactions()
     {
         $ret = array();
-        $ledger = $this->query(array('command' => 'returnDepositsWithdrawals',
+        $ledger = $this->privateQuery(array('command' => 'returnDepositsWithdrawals',
             'start' => 0,
             'end' => time()));
         foreach ($ledger['deposits'] as $item) {
@@ -205,7 +205,7 @@ class Poloniex extends BaseExchange implements ILifecycleHandler
     {
         $ret = array();
         
-        $prices = CurlHelper::query($this->public_url.'?command=returnTicker');
+        $prices = $this->publicQuery($this->public_url.'?command=returnTicker');
         foreach ($prices as $pair => $price) {
             $t = new Ticker();
             $t->currencyPair = $this->getStandardPairName($pair);
@@ -222,7 +222,7 @@ class Poloniex extends BaseExchange implements ILifecycleHandler
     public function ticker($pair)
     {
         $mktPairName = $this->getPoloniexPairName($pair);
-        $prices = CurlHelper::query($this->public_url.'?command=returnTicker');
+        $prices = $this->publicQuery($this->public_url.'?command=returnTicker');
 
         $t = new Ticker();
         $t->currencyPair = $pair;
@@ -238,7 +238,7 @@ class Poloniex extends BaseExchange implements ILifecycleHandler
     {
         $mktPairName = $this->getPoloniexPairName($pair);
 
-        $trades = CurlHelper::query($this->public_url.'?command=returnTradeHistory&currencyPair='. $mktPairName .
+        $trades = $this->publicQuery($this->public_url.'?command=returnTradeHistory&currencyPair='. $mktPairName .
             '&start=' . $sinceDate . '&end=' . time());
 
         $ret = array();
@@ -253,7 +253,7 @@ class Poloniex extends BaseExchange implements ILifecycleHandler
             $t->orderType = mb_strtoupper($raw['type']);
 
             $dt = new \DateTime($raw['date']);
-            $t->timestamp = new UTCDateTime(MongoHelper::mongoDateOfPHPDate($dt->getTimestamp()));
+            $t->timestamp = new UTCDateTime(DateHelper::mongoDateOfPHPDate($dt->getTimestamp()));
 
             $ret[] = $t;
         }
@@ -264,13 +264,13 @@ class Poloniex extends BaseExchange implements ILifecycleHandler
     public function depth($currencyPair)
     {
         $mktPairName = $this->getPoloniexPairName($currencyPair);
-        $rawBook = CurlHelper::query($this->public_url.'?command=returnOrderBook&currencyPair='. $mktPairName);
+        $rawBook = $this->publicQuery($this->public_url.'?command=returnOrderBook&currencyPair='. $mktPairName);
         return new OrderBook($rawBook);
     }
 
     public function buy($pair, $quantity, $price)
     {
-        return $this->query(
+        return $this->privateQuery(
             array(
                 'command' => 'buy',
                 'currencyPair' => mb_strtoupper($this->getPoloniexPairName($pair)),
@@ -282,7 +282,7 @@ class Poloniex extends BaseExchange implements ILifecycleHandler
 
     public function sell($pair, $quantity, $price)
     {
-        return $this->query(
+        return $this->privateQuery(
             array(
                 'command' => 'sell',
                 'currencyPair' => mb_strtoupper($this->getPoloniexPairName($pair)),
@@ -294,7 +294,7 @@ class Poloniex extends BaseExchange implements ILifecycleHandler
 
     public function activeOrders()
     {
-        return $this->query(
+        return $this->privateQuery(
             array(
                 'command' => 'returnOpenOrders',
                 'currencyPair' => 'all'
@@ -309,7 +309,7 @@ class Poloniex extends BaseExchange implements ILifecycleHandler
 
     public function cancel($orderId)
     {
-        return $this->query(
+        return $this->privateQuery(
             array(
                 'command' => 'cancelOrder',
                 'orderNumber' => $orderId
@@ -376,7 +376,7 @@ class Poloniex extends BaseExchange implements ILifecycleHandler
 
         //get the last trades for all supported pairs
         foreach($this->supportedCurrencyPairs() as $pair){
-            $th = $this->query(
+            $th = $this->privateQuery(
                 array(
                     'command' => 'returnTradeHistory',
                     'currencyPair' => mb_strtoupper($this->getPoloniexPairName($pair))
@@ -412,8 +412,14 @@ class Poloniex extends BaseExchange implements ILifecycleHandler
         return $orderResponse['orderNumber'];
     }
 
-    private function query(array $req = array()) {
-        if(!$this->nonceFactory instanceof NonceFactory)
+    private function publicQuery($uri)
+    {
+        $this->lastCall = $this->throttleQuery($this->lastCall, self::THROTTLE);
+        return CurlHelper::query($uri);
+    }
+
+    private function privateQuery(array $req = array()) {
+        if (!$this->nonceFactory instanceof NonceFactory)
             throw new \Exception('No way to get nonce!');
 
         $req['nonce'] = $this->nonceFactory->get();
@@ -428,6 +434,7 @@ class Poloniex extends BaseExchange implements ILifecycleHandler
             'Sign: '.$sign,
         );
 
+        $this->lastCall = $this->throttleQuery($this->lastCall, self::THROTTLE);
         return CurlHelper::query($this->trading_url, $post_data, $headers);
     }
 

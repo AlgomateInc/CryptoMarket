@@ -10,6 +10,7 @@
 namespace CryptoMarket\Exchange;
 
 use CryptoMarket\Helper\CurlHelper;
+use CryptoMarket\Helper\DateHelper;
 
 use CryptoMarket\Exchange\Bitfinex;
 
@@ -23,6 +24,9 @@ use CryptoMarket\Record\TradingRole;
 
 class Gemini extends Bitfinex
 {
+    protected $lastCall;
+    const THROTTLE = 1000000; // microseconds
+
     public function Name()
     {
         return "Gemini";
@@ -79,6 +83,7 @@ class Gemini extends Bitfinex
         $this->quotePrecisions[CurrencyPair::ETHUSD] = 2;
         $this->quotePrecisions[CurrencyPair::ETHBTC] = 5;
 
+        $this->lastCall = DateHelper::totalMicrotime();
     }
 
     public function positions()
@@ -118,6 +123,7 @@ class Gemini extends Bitfinex
             $maker = $this->tradingFee($pair, TradingRole::Maker, 0.0);
             $feeSchedule->addPairFee($pair, $taker, $maker);
         }
+
         $volumes = $this->authQuery('tradevolume')[0];
         foreach ($volumes as $volume) {
             $pair =  mb_strtoupper($volume['symbol']);
@@ -172,9 +178,14 @@ class Gemini extends Bitfinex
         return $this->quotePrecisions[$pair];
     }
 
-    function getApiUrl()
+    private function getApiUrl()
     {
         return 'https://api.gemini.com/v1/';
+    }
+
+    protected function throttleCall($endpoint)
+    {
+        $this->lastCall = $this->throttleQuery($this->lastCall, self::THROTTLE);
     }
 
     protected function generateHeaders($key, $payload, $signature)

@@ -4,7 +4,7 @@ namespace CryptoMarket\Account;
 
 use CryptoMarket\Account\IAccount;
 use CryptoMarket\Exchange\ExchangeName;
-use CryptoMarket\Helper\MongoHelper;
+use CryptoMarket\Helper\DateHelper;
 use CryptoMarket\Record\Currency;
 use CryptoMarket\Record\Transaction;
 
@@ -112,7 +112,7 @@ class JPMChase implements IAccount
             $tx->type = $txType;
             $tx->currency = Currency::USD;
             $tx->amount = str_replace(',','', $matches[$i]);
-            $tx->timestamp = new UTCDateTime(MongoHelper::mongoDateOfPHPDate($updateDate));
+            $tx->timestamp = new UTCDateTime(DateHelper::mongoDateOfPHPDate($updateDate));
 
             $txList[] = $tx;
         }

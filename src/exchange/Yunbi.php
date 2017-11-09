@@ -9,7 +9,7 @@
 namespace CryptoMarket\Exchange;
 
 use CryptoMarket\Helper\CurlHelper;
-use CryptoMarket\Helper\MongoHelper;
+use CryptoMarket\Helper\DateHelper;
 
 use CryptoMarket\Exchange\BaseExchange;
 use CryptoMarket\Exchange\ILifecycleHandler;
@@ -188,7 +188,7 @@ class Yunbi extends BaseExchange implements ILifecycleHandler
             $t->tradeId = $raw['id'];
             $t->price = floatval($raw['price']);
             $t->quantity = floatval($raw['volume']);
-            $t->timestamp = new UTCDateTime(MongoHelper::mongoDateOfPHPDate($raw['at']));
+            $t->timestamp = new UTCDateTime(DateHelper::mongoDateOfPHPDate($raw['at']));
             $t->orderType = ($raw['side'] == 'up')? OrderType::BUY : OrderType::SELL;
 
             $ret[] = $t;
@@ -288,7 +288,7 @@ class Yunbi extends BaseExchange implements ILifecycleHandler
             $exec->orderId = $orderId;
             $exec->quantity = $fill['volume'];
             $exec->price = $fill['price'];
-            $exec->timestamp = new UTCDateTime(MongoHelper::mongoDateOfPHPDate(strtotime($fill['at'])));
+            $exec->timestamp = new UTCDateTime(DateHelper::mongoDateOfPHPDate(strtotime($fill['at'])));
 
             $ret[] = $exec;
         }
@@ -316,7 +316,7 @@ class Yunbi extends BaseExchange implements ILifecycleHandler
             $td->orderType = ($order['side'] == 'ask')? OrderType::SELL : OrderType::BUY;
             $td->price = $order['avg_price'];
             $td->quantity = $order['volume'];
-            $td->timestamp = new UTCDateTime(MongoHelper::mongoDateOfPHPDate(strtotime($order['created_at'])));
+            $td->timestamp = new UTCDateTime(DateHelper::mongoDateOfPHPDate(strtotime($order['created_at'])));
 
             $ret[] = $td;
         }

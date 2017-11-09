@@ -4,6 +4,8 @@ namespace CryptoMarket\Exchange;
 
 use CryptoMarket\Exchange\IExchange;
 
+use CryptoMarket\Helper\DateHelper;
+
 use CryptoMarket\Record\Currency;
 use CryptoMarket\Record\CurrencyPair;
 
@@ -61,5 +63,14 @@ abstract class BaseExchange implements IExchange {
     public function quotePrecision($pair, $pairRate)
     {
         return Currency::getPrecision(CurrencyPair::Quote($pair));
+    }
+
+    protected function throttleQuery($lastCall, $throttle)
+    {
+        $timeSinceCall = DateHelper::totalMicrotime() - $lastCall;
+        if ($timeSinceCall < $throttle) {
+            usleep($throttle - $timeSinceCall);
+        }
+        return DateHelper::totalMicrotime();
     }
 } 

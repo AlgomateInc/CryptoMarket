@@ -26,14 +26,20 @@ use CryptoMarket\Record\Transaction;
 class KrakenTest extends TestCase
 {
     protected $mkt;
-    public function setUp()
+
+    public function __construct()
     {
-        error_reporting(error_reporting() ^ E_NOTICE);
+        parent::__construct();
 
         $cal = new ConfigAccountLoader(ConfigData::ACCOUNTS_CONFIG);
         $exchanges = $cal->getAccounts(array(ExchangeName::Kraken));
         $this->mkt = $exchanges[ExchangeName::Kraken];
         $this->mkt->init();
+    }
+
+    public function setUp()
+    {
+        error_reporting(error_reporting() ^ E_NOTICE);
     }
 
     public function testFees()
@@ -61,19 +67,20 @@ class KrakenTest extends TestCase
     public function testPrecisions()
     {
         $this->assertTrue($this->mkt instanceof Kraken);
+        $this->markTestSkipped();
         foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
             $ticker = $this->mkt->ticker($pair);
             $precision = $this->mkt->quotePrecision($pair, $ticker->bid);
             $this->assertEquals($ticker->bid, round($ticker->bid, $precision));
             $this->assertEquals($ticker->ask, round($ticker->ask, $precision));
             $this->assertEquals($ticker->last, round($ticker->last, $precision));
-            sleep(1);
         }
     }
 
     public function testMinOrders()
     {
         $this->assertTrue($this->mkt instanceof Kraken);
+        $this->markTestSkipped();
         foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
             $ticker = $this->mkt->ticker($pair);
             $quotePrecision = $this->mkt->quotePrecision($pair, $ticker->bid);
@@ -81,13 +88,13 @@ class KrakenTest extends TestCase
             $minOrder = $this->mkt->minimumOrderSize($pair, $price);
             $ret = $this->mkt->buy($pair, $minOrder, $price);
             $this->checkAndCancelOrder($ret);
-            sleep(1);
         }
     }
 
     public function testBasePrecision()
     {
         $this->assertTrue($this->mkt instanceof Kraken);
+        $this->markTestSkipped();
         foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
             $ticker = $this->mkt->ticker($pair);
             $quotePrecision = $this->mkt->quotePrecision($pair, $ticker->bid);
@@ -99,21 +106,20 @@ class KrakenTest extends TestCase
 
             $ret = $this->mkt->buy($pair, $minOrder, $price);
             $this->checkAndCancelOrder($ret);
-            sleep(1);
         }
     }
 
     public function testOrderSubmitAndCancel()
     {
         $this->assertTrue($this->mkt instanceof Kraken);
-        $res = $this->mkt->sell(CurrencyPair::ETHBTC, 0.1, 1);
+        $res = $this->mkt->sell(CurrencyPair::ETHBTC, 0.05, 1);
         $this->checkAndCancelOrder($res);
     }
 
     public function testOrderSubmitAndExecute()
     {
         $this->assertTrue($this->mkt instanceof Kraken);
-        $res = $this->mkt->sell(CurrencyPair::ETHBTC, 0.1, 0.001);
+        $res = $this->mkt->sell(CurrencyPair::ETHBTC, 0.05, 0.001);
         $this->assertTrue($this->mkt->isOrderAccepted($res));
         sleep(1);
         $this->assertFalse($this->mkt->isOrderOpen($res));

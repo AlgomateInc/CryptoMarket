@@ -3,9 +3,9 @@
 namespace CryptoMarket\Exchange;
 
 use CryptoMarket\Helper\CurlHelper;
+use CryptoMarket\Helper\NonceFactory;
 
 use CryptoMarket\Exchange\BaseExchange;
-use CryptoMarket\Exchange\NonceFactory;
 
 abstract class BtceStyleExchange extends BaseExchange
 {

@@ -3,12 +3,12 @@
 namespace CryptoMarket\Exchange;
 
 use CryptoMarket\Helper\CurlHelper;
-use CryptoMarket\Helper\MongoHelper;
+use CryptoMarket\Helper\DateHelper;
+use CryptoMarket\Helper\NonceFactory;
 
 use CryptoMarket\Exchange\BaseExchange;
 use CryptoMarket\Exchange\ExchangeName;
 use CryptoMarket\Exchange\ILifecycleHandler;
-use CryptoMarket\Exchange\NonceFactory;
 
 use CryptoMarket\Record\Currency;
 use CryptoMarket\Record\CurrencyPair;
@@ -37,6 +37,9 @@ class Bitstamp extends BaseExchange implements ILifecycleHandler
     private $productIds = array();
 
     private $feeSchedule;
+
+    private $lastCall;
+    const THROTTLE = 1000000;
 
     public function __construct($custid, $key, $secret)
     {
@@ -78,6 +81,7 @@ class Bitstamp extends BaseExchange implements ILifecycleHandler
         $generalSchedule->push(FeeScheduleItem::newWithoutRole(2.0e7, INF, 0.10));
 
         $this->feeSchedule->setFallbackFees($generalSchedule);
+        $this->lastCall = DateHelper::totalMicrotime();
     }
 
     public function init()
@@ -159,6 +163,7 @@ class Bitstamp extends BaseExchange implements ILifecycleHandler
     {
         $this->assertValidCurrencyPair($currencyPair);
 
+        $this->lastCall = $this->throttleQuery($this->lastCall, self::THROTTLE);
         $bstamp_depth = CurlHelper::query($this->getAPIUrl() . 'order_book/' . $this->productIds[$currencyPair]);
 
         $bstamp_depth['bids'] = array_slice($bstamp_depth['bids'],0,150);
@@ -171,6 +176,7 @@ class Bitstamp extends BaseExchange implements ILifecycleHandler
     {
         $this->assertValidCurrencyPair($pair);
 
+        $this->lastCall = $this->throttleQuery($this->lastCall, self::THROTTLE);
         $raw = CurlHelper::query($this->getAPIUrl() . 'ticker/' . $this->productIds[$pair]);
 
         $t = new Ticker();
@@ -327,13 +333,16 @@ class Bitstamp extends BaseExchange implements ILifecycleHandler
             $tx->id = $btx['id'];
             $tx->type = ($btx['type'] == 0)? TransactionType::Credit : TransactionType::Debit;
             foreach ($this->supportedCurrencies() as $curr) {
-                $amount = floatval($btx[mb_strtolower($curr)]);
-                if ($amount != 0) {
-                    $tx->currency = $curr;
-                    $tx->amount = $amount;
+                $lowerCurr = mb_strtolower($curr);
+                if (isset($btx[$lowerCurr])) {
+                    $amount = floatval($btx[$lowerCurr]);
+                    if ($amount != 0) {
+                        $tx->currency = $curr;
+                        $tx->amount = $amount;
+                    }
                 }
             }
-            $tx->timestamp = new UTCDateTime(MongoHelper::mongoDateOfPHPDate(strtotime($btx['datetime'])));
+            $tx->timestamp = new UTCDateTime(DateHelper::mongoDateOfPHPDate(strtotime($btx['datetime'])));
 
             $ret[] = $tx;
         }
@@ -378,8 +387,6 @@ class Bitstamp extends BaseExchange implements ILifecycleHandler
                 if($numFetched >= $desiredCount)
                     break;
             }
-
-            printf("Fetched $numFetched trade records...\n");
         }
         while ($numFetched < $desiredCount && count($res) == 1000);
 
@@ -393,15 +400,13 @@ class Bitstamp extends BaseExchange implements ILifecycleHandler
 
     private function authQuery($method, array $req = array()) 
     {
-        if (!$this->nonceFactory instanceof NonceFactory)
-            throw new \Exception('No way to get nonce!');
-
         // generate the POST data string
         $req['key'] = $this->key;
         $req['nonce'] = $this->nonceFactory->get();
         $req['signature'] = mb_strtoupper(hash_hmac("sha256", $req['nonce'] . $this->custid . $this->key, $this->secret));
         $post_data = http_build_query($req, '', '&');
 
+        $this->lastCall = $this->throttleQuery($this->lastCall, self::THROTTLE);
         return CurlHelper::query($this->getAPIUrl() . $method . '/', $post_data);
     }
 
