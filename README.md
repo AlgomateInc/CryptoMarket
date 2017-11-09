@@ -115,7 +115,7 @@ foreach ($allExchanges as $exchange) { // all exchanges
   * Add `MONGODB_URI` and `MONGODB_NAME` to tests/ConfigData.php
   * Add entries to the "servers" collection using the following document format:
 
-```json
+```
 {
   'ServerName': 'xxxxxxxx', // any user-defined name, used to construct MongoAccountLoader
   'ExchangeSettings': [
