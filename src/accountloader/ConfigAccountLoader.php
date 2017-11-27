@@ -5,6 +5,8 @@ namespace CryptoMarket\AccountLoader;
 use CryptoMarket\AccountLoader\IAccountLoader;
 
 use CryptoMarket\Account\BitcoinAddress;
+use CryptoMarket\Account\BitcoinCashAddress;
+use CryptoMarket\Account\BitcoinGoldAddress;
 use CryptoMarket\Account\EthereumAccount;
 use CryptoMarket\Account\EthereumClassicAccount;
 use CryptoMarket\Account\JPMChase;
@@ -107,24 +109,6 @@ class ConfigAccountLoader implements IAccountLoader
                     );
                     break;
 
-                case ExchangeName::Ethereum:
-                    $accounts[ExchangeName::Ethereum] = new EthereumAccount(
-                        $mktConfig['address']
-                    );
-                    break;
-
-                case ExchangeName::EthereumClassic:
-                    $accounts[ExchangeName::EthereumClassic] = new EthereumClassicAccount(
-                        $mktConfig['address']
-                    );
-                    break;
-
-                case ExchangeName::Bitcoin:
-                    $accounts[ExchangeName::Bitcoin] = new BitcoinAddress(
-                        $mktConfig['address']
-                    );
-                    break;
-
                 case ExchangeName::Gdax:
                     $accounts[ExchangeName::Gdax] = new Gdax(
                         $mktConfig['key'],
@@ -139,6 +123,37 @@ class ConfigAccountLoader implements IAccountLoader
                         $mktConfig['secret']
                     );
                     break;
+
+                case ExchangeName::Bitcoin:
+                    $accounts[ExchangeName::Bitcoin] = new BitcoinAddress(
+                        $mktConfig['address']
+                    );
+                    break;
+
+                case ExchangeName::BitcoinCash:
+                    $accounts[ExchangeName::BitcoinCash] = new BitcoinCashAddress(
+                        $mktConfig['address']
+                    );
+                    break;
+
+                case ExchangeName::BitcoinGold:
+                    $accounts[ExchangeName::BitcoinGold] = new BitcoinGoldAddress(
+                        $mktConfig['address']
+                    );
+                    break;
+
+                case ExchangeName::Ethereum:
+                    $accounts[ExchangeName::Ethereum] = new EthereumAccount(
+                        $mktConfig['address']
+                    );
+                    break;
+
+                case ExchangeName::EthereumClassic:
+                    $accounts[ExchangeName::EthereumClassic] = new EthereumClassicAccount(
+                        $mktConfig['address']
+                    );
+                    break;
+
             }
         }
 

@@ -19,6 +19,8 @@ class Currency
 
     // Crypto-currencies
     const BTC = 'BTC';
+    const BCH = 'BCH'; // Bitcoin Cash, also 'BCC'
+    const BTG = 'BTG';
     const FTC = 'FTC';
     const LTC = 'LTC';
     const DRK = 'DRK';

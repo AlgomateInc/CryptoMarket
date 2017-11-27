@@ -4,18 +4,22 @@ namespace CryptoMarket\Exchange;
 
 class ExchangeName
 {
-    const Btce = 'Btce';
-    const Bitstamp = 'Bitstamp';
-    const JPMChase = 'JPMChase';
     const Bitfinex = 'Bitfinex';
+    const Bitstamp = 'Bitstamp';
     const BitVC = 'BitVC';
-    const Poloniex = 'Poloniex';
+    const Btce = 'Btce';
+    const Gdax = 'Gdax';
     const Gemini = 'Gemini';
     const Kraken = 'Kraken';
-    const Ethereum = 'Ethereum';
-    const Bitcoin = 'Bitcoin';
-    const Gdax = 'Gdax';
-    const EthereumClassic = 'EthClassic';
+    const Poloniex = 'Poloniex';
     const Yunbi = 'Yunbi';
+
+    const Bitcoin = 'Bitcoin';
+    const BitcoinCash = 'BitcoinCash';
+    const BitcoinGold = 'BitcoinGold';
+    const Ethereum = 'Ethereum';
+    const EthereumClassic = 'EthClassic';
+
+    const JPMChase = 'JPMChase';
 }
 

@@ -13,8 +13,22 @@ use CryptoMarket\Account\IAccount;
 
 abstract class MultiSourcedAccount implements IAccount
 {
+    /**
+     * Provides a list of addresses to get balances for, used in the
+     * "balances" function.  Could be a bitcoin, ethereum, or otherwise address
+     */
     protected abstract function getAddressList();
+
+    /**
+     * Provides a list of functions that can get the balance at a particular
+     * address, used in "getBalance", which goes through each function until
+     * one of them succeeds
+     */
     protected abstract function getBalanceFunctions();
+    
+    /**
+     * Used to tag the balance with a proper currency when calling "balances"
+     */
     protected abstract function getCurrencyName();
 
     public function balances()

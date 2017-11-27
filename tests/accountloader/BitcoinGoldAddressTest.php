@@ -1,25 +1,20 @@
 <?php
 
-/**
- * User: jon
- * Date: 5/9/2017
- * Time: 4:10 AM
- */
-
 namespace CryptoMarket\Account\Tests;
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 use PHPUnit\Framework\TestCase;
 
-use CryptoMarket\Account\BitcoinAddress;
+use CryptoMarket\Account\BitcoinGoldAddress;
 
-class BitcoinAddressTest extends TestCase
+class BitcoinGoldAddressTest extends TestCase
 {
     public function testBalances()
     {
-        $ba = new BitcoinAddress('1CK6KHY6MHgYvmRQ4PAafKYDrg1ejbH1cE');
+        $ba = new BitcoinGoldAddress('GVQiajM9TTSNVATL3JEGLG9s48TWHTJg8S');
         $bal = $ba->balances();
+        var_dump($bal);
         $this->assertNotNull($bal);
     }
 }
