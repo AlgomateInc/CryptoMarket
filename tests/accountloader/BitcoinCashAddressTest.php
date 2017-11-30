@@ -12,7 +12,7 @@ class BitcoinCashAddressTest extends TestCase
 {
     public function testBalances()
     {
-        $ba = new BitcoinCashAddress('17Wk4GPKw9nZ9PbspzaxN3fv1L2m9NA9dg');
+        $ba = new BitcoinCashAddress('17Wk4GPKw9nZ9PbspzaxN3fv1L2m9NA9dg,1CwP1qfUENWGeaJFrbw1RigfQ2DeKXQB54');
         $bal = $ba->balances();
         $this->assertNotNull($bal);
     }

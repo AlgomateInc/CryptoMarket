@@ -18,7 +18,7 @@ class BitcoinAddressTest extends TestCase
 {
     public function testBalances()
     {
-        $ba = new BitcoinAddress('1CK6KHY6MHgYvmRQ4PAafKYDrg1ejbH1cE');
+        $ba = new BitcoinAddress('1CK6KHY6MHgYvmRQ4PAafKYDrg1ejbH1cE,18cBEMRxXHqzWWCxZNtU91F5sbUNKhL5PX');
         $bal = $ba->balances();
         $this->assertNotNull($bal);
     }

@@ -37,13 +37,11 @@ abstract class MultiSourcedAccount implements IAccount
         foreach ($this->getAddressList() as $addy)
         {
             $addy = trim($addy);
-
-            $bal = $this->getBalance($addy);
-            $totalBalance = strval($totalBalance + $bal);
+            $totalBalance += $this->getBalance($addy);
         }
 
         $balances = array();
-        $balances[$this->getCurrencyName()] = $totalBalance;
+        $balances[$this->getCurrencyName()] = strval($totalBalance);
         return $balances;
     }
 

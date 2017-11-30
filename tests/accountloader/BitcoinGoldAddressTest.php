@@ -12,9 +12,8 @@ class BitcoinGoldAddressTest extends TestCase
 {
     public function testBalances()
     {
-        $ba = new BitcoinGoldAddress('GVQiajM9TTSNVATL3JEGLG9s48TWHTJg8S');
+        $ba = new BitcoinGoldAddress('GQ6Btf3KmRz4VoMsEZi7WBdCYuY1XeXTrY,GVQiajM9TTSNVATL3JEGLG9s48TWHTJg8S');
         $bal = $ba->balances();
-        var_dump($bal);
         $this->assertNotNull($bal);
     }
 }

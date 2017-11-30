@@ -36,13 +36,13 @@ class BitcoinGoldAddress extends MultiSourcedAccount
         return array(
             function ($addr)
             {
-                $raw = CurlHelper::query("https://btgblocks.com/ext/getbalance/$addr");
-                return $raw;
+                $raw = CurlHelper::query("https://btgexp.com/ext/getbalance/$addr");
+                return floatval($raw);
             },
             function ($addr)
             {
-                $raw = CurlHelper::query("https://btgexp.com/ext/getbalance/$addr");
-                return $raw;
+                $raw = CurlHelper::query("https://btgexplorer.net/ext/getbalance/$addr");
+                return floatval($raw);
             }
         );
     }
