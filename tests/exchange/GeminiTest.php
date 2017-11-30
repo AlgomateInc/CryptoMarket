@@ -51,11 +51,9 @@ class GeminiTest extends TestCase
 
     public function testBalances()
     {
-        if ($this->mkt instanceof Gemini)
-        {
-            $ret = $this->mkt->balances();
-            $this->assertNotEmpty($ret);
-        }
+        $this->assertTrue($this->mkt instanceof Gemini);
+        $ret = $this->mkt->balances();
+        $this->assertNotEmpty($ret);
     }
 
     public function testFees()

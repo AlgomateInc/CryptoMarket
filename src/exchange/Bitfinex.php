@@ -31,6 +31,9 @@ class Bitfinex extends BaseExchange implements IMarginExchange, ILifecycleHandle
     private $secret;
     private $nonceFactory;
 
+    protected $apiUrl = '';
+    protected $apiUrlV2 = '';
+
     protected $lastCalls = array(); // assoc endpoint->calltime
     protected $throttles = array(); // assoc endpoint->throttle in ms
 
@@ -57,27 +60,22 @@ class Bitfinex extends BaseExchange implements IMarginExchange, ILifecycleHandle
         $this->throttles['trades'] = 1333333;
         $this->throttles['symbols'] = 12000000;
         $this->throttles['symbols_details'] = 12000000;
+
+        $this->apiUrl = 'https://api.bitfinex.com/v1/';
+        $this->apiUrlV2 = 'https://api.bitfinex.com/v2/';
     }
 
     function init()
     {
-        $pairs = $this->publicQuery(1,'symbols');
-        foreach($pairs as $pair){
-            try{
-                CurrencyPair::Base($pair); //checks the format of the pair to make sure it is standard
-                $this->supportedPairs[] = mb_strtoupper($pair);
-            }catch(\Exception $e){}
-        }
-
-        usleep(1200000);
-        $minOrderSizes = $this->publicQuery(1, 'symbols_details');
-
-        foreach($minOrderSizes as $symbolDetail){
-            $pairName = mb_strtoupper($symbolDetail['pair']);
-            if($this->supports($pairName)) {
+        $details = $this->publicQuery(1, 'symbols_details');
+        foreach ($details as $symbolDetail) {
+            try {
+                $pairName = mb_strtoupper($symbolDetail['pair']);
+                CurrencyPair::Base($pairName); //checks the format of the pair 
+                $this->supportedPairs[] = mb_strtoupper($pairName);
                 $this->minOrderSizes[$pairName] = $symbolDetail['minimum_order_size'];
                 $this->quotePrecisions[$pairName] = $symbolDetail['price_precision'];
-            }
+            } catch (\Exception $e) {}
         }
 
         // From https://www.bitfinex.com/fees
@@ -105,7 +103,6 @@ class Bitfinex extends BaseExchange implements IMarginExchange, ILifecycleHandle
     public function balances()
     {
         $balance_info = $this->authQuery("balances");
-
         $balances = array();
         foreach($this->supportedCurrencies() as $curr){
             $balances[$curr] = 0;
@@ -477,14 +474,14 @@ class Bitfinex extends BaseExchange implements IMarginExchange, ILifecycleHandle
         return $retList;
     }
 
-    private function getApiUrl()
+    protected function getApiUrl()
     {
-        return 'https://api.bitfinex.com/v1/';
+        return $this->apiUrl;
     }
 
-    private function getV2ApiUrl()
+    protected function getV2ApiUrl()
     {
-        return 'https://api.bitfinex.com/v2/';
+        return $this->apiUrlV2;
     }
 
     public function getOrderID($orderResponse)

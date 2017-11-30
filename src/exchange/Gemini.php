@@ -25,6 +25,8 @@ use CryptoMarket\Record\TradingRole;
 class Gemini extends Bitfinex
 {
     protected $lastCall;
+    protected $basePrecisions = array(); //assoc array pair->minIncrement
+
     const THROTTLE = 1000000; // microseconds
 
     public function Name()
@@ -32,7 +34,13 @@ class Gemini extends Bitfinex
         return "Gemini";
     }
 
-    protected $basePrecisions = array(); //assoc array pair->minIncrement
+    public function __construct($key, $secret)
+    {
+        parent::__construct($key, $secret);
+
+        $this->apiUrl = 'https://api.gemini.com/v1/';
+        $this->apiUrlV2 = 'https://api.gemini.com/v2/';
+    }
 
     function init()
     {
@@ -176,11 +184,6 @@ class Gemini extends Bitfinex
     public function quotePrecision($pair, $pairRate)
     {
         return $this->quotePrecisions[$pair];
-    }
-
-    private function getApiUrl()
-    {
-        return 'https://api.gemini.com/v1/';
     }
 
     protected function throttleCall($endpoint)

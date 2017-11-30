@@ -70,8 +70,8 @@ class BitfinexTest extends TestCase
 
     public function testBalances()
     {
+        $this->assertTrue($this->mkt instanceof Bitfinex);
         $ret = $this->mkt->balances();
-
         $this->assertNotEmpty($ret);
     }
 
