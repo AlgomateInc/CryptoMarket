@@ -86,9 +86,7 @@ class MongoAccountLoader extends ConfigAccountLoader
     {
         $this->loadAccountConfig($this->serverName, $privateKey);
         // merge all arrays together
-        return array_replace(parent::getConfig($privateKey),
-            $this->unencryptedConfig,
-            $this->encryptedConfig);
+        return array_replace($this->unencryptedConfig, $this->encryptedConfig);
     }
 
     public function getAccounts(array $mktFilter = null, $privateKey = null)
