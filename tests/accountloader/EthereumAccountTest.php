@@ -20,7 +20,7 @@ class EthereumAccountTest extends TestCase
 {
     public function testBalances()
     {
-        $ea = new EthereumAccount('0xf978b025b64233555cc3c19ada7f4199c9348bf7');
+        $ea = new EthereumAccount('0xf978b025b64233555cc3c19ada7f4199c9348bf7,0xff9bc3c0ae77104c5f9367b6b81785b5a182ece8');
         $bal = $ea->balances();
 
         $this->assertNotNull($bal);

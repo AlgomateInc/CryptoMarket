@@ -28,9 +28,11 @@ class EthereumAccount extends MultiSourcedAccount
         $this->address = explode(',', $address);
         $this->tokenContracts['GNT'] = '0xa74476443119A942dE498590Fe1f2454d7D4aC0d';
         $this->tokenContracts['TRST'] = '0xCb94be6f13A1182E4A4B6140cb7bf2025d28e41B';
+        $this->tokenContracts['SAN'] = '0x7c5a0ce9267ed19b22f8cae653f198e3e8daf098';
 
         $this->tokenPrecision['GNT'] = 18;
         $this->tokenPrecision['TRST'] = 6;
+        $this->tokenPrecision['SAN'] = 18;
     }
 
     public function Name()
@@ -53,7 +55,7 @@ class EthereumAccount extends MultiSourcedAccount
                 $tokenBalance += $raw['result'] / pow(10, $this->tokenPrecision[$tokenName]);
             }
 
-            $balances[$tokenName] = $tokenBalance;
+            $balances[$tokenName] = strval($tokenBalance);
         }
 
         return $balances;
