@@ -8,10 +8,10 @@ class ConfigDataExample
     const MONGODB_DBNAME = 'coindata';
 
     const ACCOUNTS_CONFIG = array(
-        'Btce' => array(
-            'key' => '',
-            'secret' => ''
-        ),
+//        'Btce' => array(
+//            'key' => '',
+//            'secret' => ''
+//        ),
         'Bitfinex'=> array(
             'key' => '',
             'secret' => ''
@@ -21,10 +21,10 @@ class ConfigDataExample
             'secret' => '',
             'custid' => ''
         ),
-        'BitVC'=> array(
-            'key' => '',
-            'secret' => '',
-        ),
+//        'BitVC'=> array(
+//            'key' => '',
+//            'secret' => '',
+//        ),
 //      'JPMChase' => array(
 //          'name' => 'imapmailbox',
 //          'username' => 'username',
@@ -47,10 +47,10 @@ class ConfigDataExample
             'key' => '',
             'secret' => ''
         ),
-        'Yunbi'=> array(
-            'key' => '',
-            'secret' => '',
-        ),
+//        'Yunbi'=> array(
+//            'key' => '',
+//            'secret' => '',
+//        ),
     );
 }
 
