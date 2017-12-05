@@ -27,8 +27,6 @@ class Gemini extends Bitfinex
     protected $lastCall;
     protected $basePrecisions = array(); //assoc array pair->minIncrement
 
-    const THROTTLE = 1000000; // microseconds
-
     public function Name()
     {
         return "Gemini";
@@ -40,6 +38,10 @@ class Gemini extends Bitfinex
 
         $this->apiUrl = 'https://api.gemini.com/v1/';
         $this->apiUrlV2 = 'https://api.gemini.com/v2/';
+
+        // Per API documentation
+        $this->throttles = array();
+        $this->defaultThrottle = 1000000; // microseconds
     }
 
     function init()
@@ -90,8 +92,6 @@ class Gemini extends Bitfinex
         $this->quotePrecisions[CurrencyPair::BTCUSD] = 2;
         $this->quotePrecisions[CurrencyPair::ETHUSD] = 2;
         $this->quotePrecisions[CurrencyPair::ETHBTC] = 5;
-
-        $this->lastCall = DateHelper::totalMicrotime();
     }
 
     public function positions()
@@ -184,11 +184,6 @@ class Gemini extends Bitfinex
     public function quotePrecision($pair, $pairRate)
     {
         return $this->quotePrecisions[$pair];
-    }
-
-    protected function throttleCall($endpoint)
-    {
-        $this->lastCall = $this->throttleQuery($this->lastCall, self::THROTTLE);
     }
 
     protected function generateHeaders($key, $payload, $signature)

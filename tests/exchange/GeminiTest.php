@@ -24,16 +24,13 @@ use CryptoMarket\Record\TradingRole;
 
 class GeminiTest extends TestCase
 {
-    protected $mkt;
-
-    public function __construct()
+    protected static $mkt;
+    public static function setUpBeforeClass()
     {
-        parent::__construct();
-
         $cal = new ConfigAccountLoader(ConfigData::ACCOUNTS_CONFIG);
         $exchanges = $cal->getAccounts(array(ExchangeName::Gemini));
-        $this->mkt = $exchanges[ExchangeName::Gemini];
-        $this->mkt->init();
+        self::$mkt = $exchanges[ExchangeName::Gemini];
+        self::$mkt->init();
     }
 
     public function setUp()
@@ -43,40 +40,40 @@ class GeminiTest extends TestCase
 
     public function testPrecisions()
     {
-        $this->assertTrue($this->mkt instanceof Gemini);
-        $this->assertEquals(2, $this->mkt->quotePrecision(CurrencyPair::BTCUSD, 1));
-        $this->assertEquals(2, $this->mkt->quotePrecision(CurrencyPair::ETHUSD, 1));
-        $this->assertEquals(5, $this->mkt->quotePrecision(CurrencyPair::ETHBTC, 1));
+        $this->assertTrue(self::$mkt instanceof Gemini);
+        $this->assertEquals(2, self::$mkt->quotePrecision(CurrencyPair::BTCUSD, 1));
+        $this->assertEquals(2, self::$mkt->quotePrecision(CurrencyPair::ETHUSD, 1));
+        $this->assertEquals(5, self::$mkt->quotePrecision(CurrencyPair::ETHBTC, 1));
     }
 
     public function testBalances()
     {
-        $this->assertTrue($this->mkt instanceof Gemini);
-        $ret = $this->mkt->balances();
+        $this->assertTrue(self::$mkt instanceof Gemini);
+        $ret = self::$mkt->balances();
         $this->assertNotEmpty($ret);
     }
 
     public function testFees()
     {
-        $this->assertTrue($this->mkt instanceof Gemini);
-        $this->assertEquals(0.25, $this->mkt->tradingFee(CurrencyPair::BTCUSD, TradingRole::Taker, 1000.0));
-        $this->assertEquals(0.15, $this->mkt->tradingFee(CurrencyPair::BTCUSD, TradingRole::Taker, 10000.0));
-        $this->assertEquals(0.25, $this->mkt->tradingFee(CurrencyPair::ETHUSD, TradingRole::Taker, 10.0));
-        $this->assertEquals(0.15, $this->mkt->tradingFee(CurrencyPair::ETHUSD, TradingRole::Taker, 200000.0));
+        $this->assertTrue(self::$mkt instanceof Gemini);
+        $this->assertEquals(0.25, self::$mkt->tradingFee(CurrencyPair::BTCUSD, TradingRole::Taker, 1000.0));
+        $this->assertEquals(0.15, self::$mkt->tradingFee(CurrencyPair::BTCUSD, TradingRole::Taker, 10000.0));
+        $this->assertEquals(0.25, self::$mkt->tradingFee(CurrencyPair::ETHUSD, TradingRole::Taker, 10.0));
+        $this->assertEquals(0.15, self::$mkt->tradingFee(CurrencyPair::ETHUSD, TradingRole::Taker, 200000.0));
     }
 
     public function testUserFees()
     {
-        $this->assertTrue($this->mkt instanceof Gemini);
-        $this->assertEquals(0.25, $this->mkt->currentTradingFee(CurrencyPair::BTCUSD, TradingRole::Taker));
-        $this->assertEquals(0.25, $this->mkt->currentTradingFee(CurrencyPair::ETHUSD, TradingRole::Maker));
+        $this->assertTrue(self::$mkt instanceof Gemini);
+        $this->assertEquals(0.25, self::$mkt->currentTradingFee(CurrencyPair::BTCUSD, TradingRole::Taker));
+        $this->assertEquals(0.25, self::$mkt->currentTradingFee(CurrencyPair::ETHUSD, TradingRole::Maker));
     }
 
     public function testFeeSchedule()
     {
-        $this->assertTrue($this->mkt instanceof Gemini);
-        $schedule = $this->mkt->currentFeeSchedule();
-        foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
+        $this->assertTrue(self::$mkt instanceof Gemini);
+        $schedule = self::$mkt->currentFeeSchedule();
+        foreach (self::$mkt->supportedCurrencyPairs() as $pair) {
             $taker = $schedule->getFee($pair, TradingRole::Taker);
             $this->assertNotNull($taker);
             sleep(1);
@@ -88,14 +85,14 @@ class GeminiTest extends TestCase
 
     public function testMinOrders()
     {
-        $this->assertTrue($this->mkt instanceof Gemini);
-        foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
-            $ticker = $this->mkt->ticker($pair);
-            $quotePrecision = $this->mkt->quotePrecision($pair, $ticker->bid);
+        $this->assertTrue(self::$mkt instanceof Gemini);
+        foreach (self::$mkt->supportedCurrencyPairs() as $pair) {
+            $ticker = self::$mkt->ticker($pair);
+            $quotePrecision = self::$mkt->quotePrecision($pair, $ticker->bid);
             $price = round($ticker->bid * 0.9, $quotePrecision);
-            $minOrder = $this->mkt->minimumOrderSize($pair, $price);
+            $minOrder = self::$mkt->minimumOrderSize($pair, $price);
 
-            $ret = $this->mkt->buy($pair, $minOrder, $price);
+            $ret = self::$mkt->buy($pair, $minOrder, $price);
             $this->checkAndCancelOrder($ret);
             sleep(1);
         }
@@ -103,17 +100,17 @@ class GeminiTest extends TestCase
 
     public function testBasePrecision()
     {
-        $this->assertTrue($this->mkt instanceof Gemini);
-        foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
-            $ticker = $this->mkt->ticker($pair);
-            $quotePrecision = $this->mkt->quotePrecision($pair, $ticker->bid);
+        $this->assertTrue(self::$mkt instanceof Gemini);
+        foreach (self::$mkt->supportedCurrencyPairs() as $pair) {
+            $ticker = self::$mkt->ticker($pair);
+            $quotePrecision = self::$mkt->quotePrecision($pair, $ticker->bid);
             $price = round($ticker->bid * 0.9, $quotePrecision);
 
-            $minOrder = $this->mkt->minimumOrderSize($pair, $price);
-            $basePrecision = $this->mkt->basePrecision($pair, $ticker->bid);
+            $minOrder = self::$mkt->minimumOrderSize($pair, $price);
+            $basePrecision = self::$mkt->basePrecision($pair, $ticker->bid);
             $minOrder += bcpow(10, -1 * $basePrecision, $basePrecision);
 
-            $ret = $this->mkt->buy($pair, $minOrder, $price);
+            $ret = self::$mkt->buy($pair, $minOrder, $price);
             $this->checkAndCancelOrder($ret);
             sleep(1);
         }
@@ -121,36 +118,36 @@ class GeminiTest extends TestCase
 
     public function testBuyOrderSubmission()
     {
-        if ($this->mkt instanceof Gemini)
+        if (self::$mkt instanceof Gemini)
         {
-            $response = $this->mkt->buy(CurrencyPair::BTCUSD, 1, 1);
+            $response = self::$mkt->buy(CurrencyPair::BTCUSD, 1, 1);
             $this->checkAndCancelOrder($response);
         }
     }
 
     public function testSellOrderSubmission()
     {
-        if ($this->mkt instanceof Gemini)
+        if (self::$mkt instanceof Gemini)
         {
-            $response = $this->mkt->sell(CurrencyPair::BTCUSD, 0.01, 10000);
+            $response = self::$mkt->sell(CurrencyPair::BTCUSD, 0.01, 20000);
             $this->checkAndCancelOrder($response);
         }
     }
 
     public function testMyTrades()
     {
-        if ($this->mkt instanceof Gemini)
+        if (self::$mkt instanceof Gemini)
         {
-            $res = $this->mkt->tradeHistory(50);
+            $res = self::$mkt->tradeHistory(50);
             $this->assertNotNull($res);
         }
     }
 
     public function testPublicTrades()
     {
-        if ($this->mkt instanceof Gemini)
+        if (self::$mkt instanceof Gemini)
         {
-            $res = $this->mkt->trades(CurrencyPair::BTCUSD, time()-60);
+            $res = self::$mkt->trades(CurrencyPair::BTCUSD, time()-60);
             $this->assertNotNull($res);
         }
     }
@@ -159,11 +156,11 @@ class GeminiTest extends TestCase
     {
         $this->assertNotNull($response);
 
-        $this->assertTrue($this->mkt->isOrderAccepted($response));
-        $this->assertTrue($this->mkt->isOrderOpen($response));
+        $this->assertTrue(self::$mkt->isOrderAccepted($response));
+        $this->assertTrue(self::$mkt->isOrderOpen($response));
 
-        $this->assertNotNull($this->mkt->cancel($response['order_id']));
-        $this->assertFalse($this->mkt->isOrderOpen($response));
+        $this->assertNotNull(self::$mkt->cancel($response['order_id']));
+        $this->assertFalse(self::$mkt->isOrderOpen($response));
     }
 }
  

@@ -26,17 +26,14 @@ use CryptoMarket\Record\Transaction;
 
 class PoloniexTest extends TestCase
 {
-    protected $mkt;
-
-    public function __construct()
+    protected static $mkt;
+    public static function setUpBeforeClass()
     {
-        parent::__construct();
         date_default_timezone_set('UTC');
-
         $cal = new ConfigAccountLoader(ConfigData::ACCOUNTS_CONFIG);
         $exchanges = $cal->getAccounts(array(ExchangeName::Poloniex));
-        $this->mkt = $exchanges[ExchangeName::Poloniex];
-        $this->mkt->init();
+        self::$mkt = $exchanges[ExchangeName::Poloniex];
+        self::$mkt->init();
     }
 
     public function setUp()
@@ -46,19 +43,19 @@ class PoloniexTest extends TestCase
 
     public function testSupportedPairs()
     {
-        $this->assertTrue($this->mkt instanceof Poloniex);
-        $this->assertTrue($this->mkt->supports(CurrencyPair::BTCUSD));
-        $this->assertTrue($this->mkt->supports(CurrencyPair::ETHUSD));
-        $this->assertTrue($this->mkt->supports(CurrencyPair::ETHBTC));
-        $this->assertTrue($this->mkt->supports('LTCXMR'));
+        $this->assertTrue(self::$mkt instanceof Poloniex);
+        $this->assertTrue(self::$mkt->supports(CurrencyPair::BTCUSD));
+        $this->assertTrue(self::$mkt->supports(CurrencyPair::ETHUSD));
+        $this->assertTrue(self::$mkt->supports(CurrencyPair::ETHBTC));
+        $this->assertTrue(self::$mkt->supports('LTCXMR'));
     }
 
     public function testGetAllMarketData()
     {
-        $this->assertTrue($this->mkt instanceof Poloniex);
-        $ret = $this->mkt->tickers();
+        $this->assertTrue(self::$mkt instanceof Poloniex);
+        $ret = self::$mkt->tickers();
         foreach ($ret as $ticker) {
-            $this->assertTrue($this->mkt->supports($ticker->currencyPair));
+            $this->assertTrue(self::$mkt->supports($ticker->currencyPair));
             $this->assertNotNull($ticker->bid);
             $this->assertNotNull($ticker->ask);
             $this->assertNotNull($ticker->last);
@@ -68,21 +65,21 @@ class PoloniexTest extends TestCase
 
     public function testMinOrderSize()
     {
-        $this->assertTrue($this->mkt instanceof Poloniex);
-        $this->assertEquals(0.000001, $this->mkt->minimumOrderSize(CurrencyPair::BTCUSD, 1202));
-        $this->assertGreaterThan(0.000001, $this->mkt->minimumOrderSize(CurrencyPair::BTCUSD, 0.01));
+        $this->assertTrue(self::$mkt instanceof Poloniex);
+        $this->assertEquals(0.000001, self::$mkt->minimumOrderSize(CurrencyPair::BTCUSD, 1202));
+        $this->assertGreaterThan(0.000001, self::$mkt->minimumOrderSize(CurrencyPair::BTCUSD, 0.01));
     }
 
     public function testMinOrders()
     {
-        $this->assertTrue($this->mkt instanceof Poloniex);
+        $this->assertTrue(self::$mkt instanceof Poloniex);
         $this->markTestSkipped();
-        foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
-            $ticker = $this->mkt->ticker($pair);
-            $quotePrecision = $this->mkt->quotePrecision($pair, $ticker->bid);
+        foreach (self::$mkt->supportedCurrencyPairs() as $pair) {
+            $ticker = self::$mkt->ticker($pair);
+            $quotePrecision = self::$mkt->quotePrecision($pair, $ticker->bid);
             $price = round($ticker->bid * 0.9, $quotePrecision);
-            $minOrder = $this->mkt->minimumOrderSize($pair, $price);
-            $ret = $this->mkt->buy($pair, $minOrder, $price);
+            $minOrder = self::$mkt->minimumOrderSize($pair, $price);
+            $ret = self::$mkt->buy($pair, $minOrder, $price);
             $this->checkAndCancelOrder($ret);
             sleep(1);
         }
@@ -90,18 +87,18 @@ class PoloniexTest extends TestCase
 
     public function testBasePrecision()
     {
-        $this->assertTrue($this->mkt instanceof Poloniex);
+        $this->assertTrue(self::$mkt instanceof Poloniex);
         $this->markTestSkipped();
-        foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
-            $ticker = $this->mkt->ticker($pair);
-            $quotePrecision = $this->mkt->quotePrecision($pair, $ticker->bid);
+        foreach (self::$mkt->supportedCurrencyPairs() as $pair) {
+            $ticker = self::$mkt->ticker($pair);
+            $quotePrecision = self::$mkt->quotePrecision($pair, $ticker->bid);
             $price = round($ticker->bid * 0.9, $quotePrecision);
 
-            $minOrder = $this->mkt->minimumOrderSize($pair, $price);
-            $basePrecision = $this->mkt->basePrecision($pair, $ticker->bid);
+            $minOrder = self::$mkt->minimumOrderSize($pair, $price);
+            $basePrecision = self::$mkt->basePrecision($pair, $ticker->bid);
             $minOrder += bcpow(10, -1 * $basePrecision, $basePrecision);
 
-            $ret = $this->mkt->buy($pair, $minOrder, $price);
+            $ret = self::$mkt->buy($pair, $minOrder, $price);
             $this->checkAndCancelOrder($ret);
             sleep(1);
         }
@@ -109,37 +106,37 @@ class PoloniexTest extends TestCase
 
     public function testBalances()
     {
-        $this->assertTrue($this->mkt instanceof Poloniex);
-        $ret = $this->mkt->balances();
+        $this->assertTrue(self::$mkt instanceof Poloniex);
+        $ret = self::$mkt->balances();
         $this->assertNotEmpty($ret);
     }
 
     public function testFees()
     {
-        $this->assertTrue($this->mkt instanceof Poloniex);
-        $usdMakerFee = $this->mkt->currentTradingFee(CurrencyPair::BTCUSD, TradingRole::Maker);
-        $eurMakerFee = $this->mkt->currentTradingFee(CurrencyPair::BTCEUR, TradingRole::Maker);
+        $this->assertTrue(self::$mkt instanceof Poloniex);
+        $usdMakerFee = self::$mkt->currentTradingFee(CurrencyPair::BTCUSD, TradingRole::Maker);
+        $eurMakerFee = self::$mkt->currentTradingFee(CurrencyPair::BTCEUR, TradingRole::Maker);
         $this->assertEquals($usdMakerFee, $eurMakerFee);
         $this->assertEquals(0.15, $eurMakerFee);
-        $usdTakerFee = $this->mkt->currentTradingFee(CurrencyPair::BTCUSD, TradingRole::Taker);
-        $eurTakerFee = $this->mkt->currentTradingFee(CurrencyPair::BTCEUR, TradingRole::Taker);
+        $usdTakerFee = self::$mkt->currentTradingFee(CurrencyPair::BTCUSD, TradingRole::Taker);
+        $eurTakerFee = self::$mkt->currentTradingFee(CurrencyPair::BTCEUR, TradingRole::Taker);
         $this->assertEquals($usdTakerFee, $eurTakerFee);
         $this->assertEquals(0.25, $eurTakerFee);
 
-        foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
+        foreach (self::$mkt->supportedCurrencyPairs() as $pair) {
             $quote = CurrencyPair::Quote($pair);
             if ($quote == Currency::BTC) {
-                $this->assertEquals(0.1, $this->mkt->tradingFee($pair, TradingRole::Taker, 3.0e4));
-                $this->assertEquals(0.0, $this->mkt->tradingFee($pair, TradingRole::Maker, 3.0e4));
+                $this->assertEquals(0.1, self::$mkt->tradingFee($pair, TradingRole::Taker, 3.0e4));
+                $this->assertEquals(0.0, self::$mkt->tradingFee($pair, TradingRole::Maker, 3.0e4));
             }
         }
     }
 
     public function testFeeSchedule()
     {
-        $this->assertTrue($this->mkt instanceof Poloniex);
-        $schedule = $this->mkt->currentFeeSchedule();
-        foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
+        $this->assertTrue(self::$mkt instanceof Poloniex);
+        $schedule = self::$mkt->currentFeeSchedule();
+        foreach (self::$mkt->supportedCurrencyPairs() as $pair) {
             $taker = $schedule->getFee($pair, TradingRole::Taker);
             $this->assertNotNull($taker);
             $maker = $schedule->getFee($pair, TradingRole::Maker);
@@ -149,23 +146,23 @@ class PoloniexTest extends TestCase
 
     public function testBuyOrderSubmission()
     {
-        $this->assertTrue($this->mkt instanceof Poloniex);
-        $response = $this->mkt->buy(CurrencyPair::XCPBTC, 1, 0.0001);
+        $this->assertTrue(self::$mkt instanceof Poloniex);
+        $response = self::$mkt->buy(CurrencyPair::XCPBTC, 1, 0.0001);
         $this->checkAndCancelOrder($response);
     }
 
     public function testSellOrderSubmission()
     {
-        $this->assertTrue($this->mkt instanceof Poloniex);
-        $response = $this->mkt->sell(CurrencyPair::XCPBTC, 1, 1000);
+        $this->assertTrue(self::$mkt instanceof Poloniex);
+        $response = self::$mkt->sell(CurrencyPair::XCPBTC, 1, 1000);
         $this->checkAndCancelOrder($response);
     }
 
     public function testOrderExecutions()
     {
-        $this->assertTrue($this->mkt instanceof Poloniex);
-        $response = $this->mkt->buy(CurrencyPair::XCPBTC, 1, 1);
-        $oe = $this->mkt->getOrderExecutions($response);
+        $this->assertTrue(self::$mkt instanceof Poloniex);
+        $response = self::$mkt->buy(CurrencyPair::XCPBTC, 1, 1);
+        $oe = self::$mkt->getOrderExecutions($response);
 
         $this->assertNotNull($oe);
         $this->assertTrue(count($oe) > 0);
@@ -173,22 +170,22 @@ class PoloniexTest extends TestCase
 
     public function testMyTrades()
     {
-        $this->assertTrue($this->mkt instanceof Poloniex);
-        $res = $this->mkt->tradeHistory(50);
+        $this->assertTrue(self::$mkt instanceof Poloniex);
+        $res = self::$mkt->tradeHistory(50);
         $this->assertNotNull($res);
     }
 
     public function testPublicTrades()
     {
-        $this->assertTrue($this->mkt instanceof Poloniex);
-        $res = $this->mkt->trades(CurrencyPair::XCPBTC, time()-600);
+        $this->assertTrue(self::$mkt instanceof Poloniex);
+        $res = self::$mkt->trades(CurrencyPair::XCPBTC, time()-600);
         $this->assertNotNull($res);
     }
 
     public function testTransactions()
     {
-        $this->assertTrue($this->mkt instanceof Poloniex);
-        $transactions = $this->mkt->transactions();
+        $this->assertTrue(self::$mkt instanceof Poloniex);
+        $transactions = self::$mkt->transactions();
         $this->assertNotEmpty($transactions);
         foreach ($transactions as $trans) {
             $this->assertEquals("Poloniex", $trans->exchange);
@@ -201,12 +198,12 @@ class PoloniexTest extends TestCase
     {
         $this->assertNotNull($response);
 
-        $this->assertTrue($this->mkt->isOrderAccepted($response));
-        $this->assertTrue($this->mkt->isOrderOpen($response));
+        $this->assertTrue(self::$mkt->isOrderAccepted($response));
+        $this->assertTrue(self::$mkt->isOrderOpen($response));
 
-        $this->assertNotNull($this->mkt->cancel($this->mkt->getOrderID($response)));
+        $this->assertNotNull(self::$mkt->cancel(self::$mkt->getOrderID($response)));
         sleep(1);
-        $this->assertFalse($this->mkt->isOrderOpen($response));
+        $this->assertFalse(self::$mkt->isOrderOpen($response));
     }
 }
  

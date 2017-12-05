@@ -28,16 +28,13 @@ use CryptoMarket\Record\Transaction;
 
 class BitstampTest extends TestCase
 {
-    protected $mkt;
-
-    public function __construct()
+    protected static $mkt;
+    public static function setUpBeforeClass()
     {
-        parent::__construct();
-
         $cal = new ConfigAccountLoader(ConfigData::ACCOUNTS_CONFIG);
         $exchanges = $cal->getAccounts(array(ExchangeName::Bitstamp));
-        $this->mkt = $exchanges[ExchangeName::Bitstamp];
-        $this->mkt->init();
+        self::$mkt = $exchanges[ExchangeName::Bitstamp];
+        self::$mkt->init();
     }
 
     public function setUp()
@@ -47,15 +44,15 @@ class BitstampTest extends TestCase
 
     public function testDepth()
     {
-        $depth = $this->mkt->depth(CurrencyPair::XRPEUR);
+        $depth = self::$mkt->depth(CurrencyPair::XRPEUR);
         $this->assertNotEmpty($depth);
     }
 
     public function testTickers()
     {
-        $currs = $this->mkt->supportedCurrencyPairs();
+        $currs = self::$mkt->supportedCurrencyPairs();
         foreach ($currs as $curr) {
-            $ticker = $this->mkt->ticker($curr);
+            $ticker = self::$mkt->ticker($curr);
             $this->assertNotEmpty($ticker);
             $this->assertTrue($ticker instanceof Ticker);
         }
@@ -63,8 +60,8 @@ class BitstampTest extends TestCase
 
     public function testBalances()
     {
-        $balances = $this->mkt->balances();
-        $currs = $this->mkt->supportedCurrencies();
+        $balances = self::$mkt->balances();
+        $currs = self::$mkt->supportedCurrencies();
         foreach ($currs as $curr) {
             $this->assertArrayHasKey($curr, $balances);
         }
@@ -72,19 +69,19 @@ class BitstampTest extends TestCase
 
     public function testFees()
     {
-        $this->assertTrue($this->mkt instanceof Bitstamp);
+        $this->assertTrue(self::$mkt instanceof Bitstamp);
         $this->markTestSkipped();
-        foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
-            $this->assertEquals(0.25, $this->mkt->currentTradingFee($pair, TradingRole::Taker));
-            $this->assertEquals(0.13, $this->mkt->tradingFee($pair, TradingRole::Taker, 1.1e6));
+        foreach (self::$mkt->supportedCurrencyPairs() as $pair) {
+            $this->assertEquals(0.25, self::$mkt->currentTradingFee($pair, TradingRole::Taker));
+            $this->assertEquals(0.13, self::$mkt->tradingFee($pair, TradingRole::Taker, 1.1e6));
         }
     }
 
     public function testFeeSchedule()
     {
-        $this->assertTrue($this->mkt instanceof Bitstamp);
-        $schedule = $this->mkt->currentFeeSchedule();
-        foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
+        $this->assertTrue(self::$mkt instanceof Bitstamp);
+        $schedule = self::$mkt->currentFeeSchedule();
+        foreach (self::$mkt->supportedCurrencyPairs() as $pair) {
             $taker = $schedule->getFee($pair, TradingRole::Taker);
             $this->assertNotNull($taker);
             $maker = $schedule->getFee($pair, TradingRole::Maker);
@@ -94,76 +91,76 @@ class BitstampTest extends TestCase
 
     public function testMinOrders()
     {
-        $this->assertTrue($this->mkt instanceof Bitstamp);
+        $this->assertTrue(self::$mkt instanceof Bitstamp);
         $this->markTestSkipped();
-        foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
-            $ticker = $this->mkt->ticker($pair);
-            $quotePrecision = $this->mkt->quotePrecision($pair, $ticker->bid);
+        foreach (self::$mkt->supportedCurrencyPairs() as $pair) {
+            $ticker = self::$mkt->ticker($pair);
+            $quotePrecision = self::$mkt->quotePrecision($pair, $ticker->bid);
             $price = round($ticker->bid * 0.9, $quotePrecision);
-            $minOrder = $this->mkt->minimumOrderSize($pair, $price);
-            $ret = $this->mkt->buy($pair, $minOrder, $price);
+            $minOrder = self::$mkt->minimumOrderSize($pair, $price);
+            $ret = self::$mkt->buy($pair, $minOrder, $price);
             $this->checkAndCancelOrder($ret);
         }
     }
 
     public function testBasePrecision()
     {
-        $this->assertTrue($this->mkt instanceof Bitstamp);
+        $this->assertTrue(self::$mkt instanceof Bitstamp);
         $this->markTestSkipped();
-        foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
-            $ticker = $this->mkt->ticker($pair);
-            $quotePrecision = $this->mkt->quotePrecision($pair, $ticker->bid);
+        foreach (self::$mkt->supportedCurrencyPairs() as $pair) {
+            $ticker = self::$mkt->ticker($pair);
+            $quotePrecision = self::$mkt->quotePrecision($pair, $ticker->bid);
             $price = round($ticker->bid * 0.9, $quotePrecision);
 
-            $minOrder = $this->mkt->minimumOrderSize($pair, $price);
-            $basePrecision = $this->mkt->basePrecision($pair, $ticker->bid);
+            $minOrder = self::$mkt->minimumOrderSize($pair, $price);
+            $basePrecision = self::$mkt->basePrecision($pair, $ticker->bid);
             $minOrder += bcpow(10, -1 * $basePrecision, $basePrecision);
 
-            $ret = $this->mkt->buy($pair, $minOrder, $price);
+            $ret = self::$mkt->buy($pair, $minOrder, $price);
             $this->checkAndCancelOrder($ret);
         }
     }
 
     public function testBTCUSDOrder()
     {
-        $this->assertTrue($this->mkt instanceof Bitstamp);
-        $response = $this->mkt->sell(CurrencyPair::BTCUSD, 0.01, 100000);
+        $this->assertTrue(self::$mkt instanceof Bitstamp);
+        $response = self::$mkt->sell(CurrencyPair::BTCUSD, 0.01, 100000);
         $this->checkAndCancelOrder($response);
     }
 
     public function testBTCEUROrder()
     {
-        $this->assertTrue($this->mkt instanceof Bitstamp);
-        $response = $this->mkt->sell(CurrencyPair::BTCEUR, 0.01, 100000);
+        $this->assertTrue(self::$mkt instanceof Bitstamp);
+        $response = self::$mkt->sell(CurrencyPair::BTCEUR, 0.01, 100000);
         $this->checkAndCancelOrder($response);
     }
 
     public function testActiveOrders()
     {
-        $this->assertTrue($this->mkt instanceof Bitstamp);
-        $response = $this->mkt->sell(CurrencyPair::BTCEUR, 0.01, 100000);
-        $this->assertNotEmpty($this->mkt->activeOrders());
-        $this->assertTrue($this->mkt->isOrderOpen($response));
+        $this->assertTrue(self::$mkt instanceof Bitstamp);
+        $response = self::$mkt->sell(CurrencyPair::BTCEUR, 0.01, 100000);
+        $this->assertNotEmpty(self::$mkt->activeOrders());
+        $this->assertTrue(self::$mkt->isOrderOpen($response));
         $this->checkAndCancelOrder($response);
     }
 
     public function testOrderExecutions()
     {
-        $this->assertTrue($this->mkt instanceof Bitstamp);
-        $response = $this->mkt->buy(CurrencyPair::BTCEUR, 0.01, 100000);
+        $this->assertTrue(self::$mkt instanceof Bitstamp);
+        $response = self::$mkt->buy(CurrencyPair::BTCEUR, 0.01, 100000);
         sleep(1);
-        $exs = $this->mkt->getOrderExecutions($response);
+        $exs = self::$mkt->getOrderExecutions($response);
         $this->assertNotEmpty($exs);
-        $response = $this->mkt->sell(CurrencyPair::BTCEUR, 0.01, 1);
+        $response = self::$mkt->sell(CurrencyPair::BTCEUR, 0.01, 1);
         sleep(1);
-        $exs = $this->mkt->getOrderExecutions($response);
+        $exs = self::$mkt->getOrderExecutions($response);
         $this->assertNotEmpty($exs);
     }
 
     public function testTransactions()
     {
-        $this->assertTrue($this->mkt instanceof Bitstamp);
-        $transactions = $this->mkt->transactions();
+        $this->assertTrue(self::$mkt instanceof Bitstamp);
+        $transactions = self::$mkt->transactions();
         $this->assertNotEmpty($transactions);
         foreach ($transactions as $trans) {
             $this->assertEquals("Bitstamp", $trans->exchange);
@@ -174,8 +171,8 @@ class BitstampTest extends TestCase
 
     public function testTradeHistory()
     {
-        $this->assertTrue($this->mkt instanceof Bitstamp);
-        $history = $this->mkt->tradeHistory();
+        $this->assertTrue(self::$mkt instanceof Bitstamp);
+        $history = self::$mkt->tradeHistory();
         foreach ($history as $trade) {
             $this->assertEquals("Bitstamp", $trade->exchange);
             $this->assertTrue($trade instanceof Trade);
@@ -186,8 +183,8 @@ class BitstampTest extends TestCase
     private function checkAndCancelOrder($response)
     {
         $this->assertNotNull($response);
-        $this->assertTrue($this->mkt->isOrderAccepted($response));
-        $this->assertTrue($this->mkt->cancel($response['id']));
+        $this->assertTrue(self::$mkt->isOrderAccepted($response));
+        $this->assertTrue(self::$mkt->cancel($response['id']));
     }
 }
  

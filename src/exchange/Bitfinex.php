@@ -36,6 +36,8 @@ class Bitfinex extends BaseExchange implements IMarginExchange, ILifecycleHandle
 
     protected $lastCalls = array(); // assoc endpoint->calltime
     protected $throttles = array(); // assoc endpoint->throttle in ms
+    protected $lastCall; // general last call time
+    protected $defaultThrottle = 0; // fallback if endpoint not found
 
     protected $supportedPairs = array();
     protected $minOrderSizes = array(); //assoc array pair->minordersize
@@ -55,6 +57,7 @@ class Bitfinex extends BaseExchange implements IMarginExchange, ILifecycleHandle
         $this->throttles['history'] = 3000000;
         $this->throttles['order'] = 0;
         $this->throttles['mytrades'] = 1333333;
+        $this->throttles['positions'] = 0;
         $this->throttles['pubticker'] = 1000000;
         $this->throttles['tickers'] = 1000000;
         $this->throttles['trades'] = 1333333;
@@ -63,6 +66,8 @@ class Bitfinex extends BaseExchange implements IMarginExchange, ILifecycleHandle
 
         $this->apiUrl = 'https://api.bitfinex.com/v1/';
         $this->apiUrlV2 = 'https://api.bitfinex.com/v2/';
+
+        $this->lastCall = DateHelper::totalMicrotime();
     }
 
     function init()
@@ -409,13 +414,20 @@ class Bitfinex extends BaseExchange implements IMarginExchange, ILifecycleHandle
 
     protected function throttleCall($endpoint)
     {
-        if (array_key_exists($endpoint, $this->lastCalls)) {
-            $timeSinceCall = DateHelper::totalMicrotime() - $this->lastCalls[$endpoint];
-            if ($timeSinceCall < $this->throttles[$endpoint]) {
-                usleep($this->throttles[$endpoint] - $timeSinceCall);
+        if (array_key_exists($endpoint, $this->throttles)) {
+            $throttle = $this->throttles[$endpoint];
+            if (array_key_exists($endpoint, $this->lastCalls)) {
+                $lastCallTime = $this->lastCalls[$endpoint];
+                $timeSinceCall = DateHelper::totalMicrotime() - $lastCallTime;
+                if ($timeSinceCall < $throttle) {
+                    usleep($throttle - $timeSinceCall);
+                }
             }
+            $this->lastCalls[$endpoint] = DateHelper::totalMicrotime();
+        } else {
+            $this->lastCall = DateHelper::totalMicrotime();
+            $this->lastCall = $this->throttleQuery($this->lastCall, $this->defaultThrottle);
         }
-        $this->lastCalls[$endpoint] = DateHelper::totalMicrotime();
     }
 
     protected function publicQuery($version, $endpoint, $params='') {
