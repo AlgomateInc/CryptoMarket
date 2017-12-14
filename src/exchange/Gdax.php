@@ -38,10 +38,10 @@ class Gdax extends BaseExchange implements ILifecycleHandler
     private $passphrase;
 
     private $lastPublicCall;
-    const PUBLIC_THROTTLE = 3333333; // in microseconds
+    const PUBLIC_THROTTLE = 333333; // in microseconds
 
     private $lastPrivateCall;
-    const PRIVATE_THROTTLE = 2000000; // in microseconds
+    const PRIVATE_THROTTLE = 200000; // in microseconds
 
     private $supportedPairs = array();
     private $minOrderSizes = array(); //assoc array pair->minordersize

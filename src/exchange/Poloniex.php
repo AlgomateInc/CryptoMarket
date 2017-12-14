@@ -44,7 +44,7 @@ class Poloniex extends BaseExchange implements ILifecycleHandler
     private $supportedPairs;
 
     private $lastCall;
-    const THROTTLE = 200000; // 5 calls / second
+    const THROTTLE = 166667; // 6 calls / second
 
     public function __construct($key, $secret){
         $this->key = $key;

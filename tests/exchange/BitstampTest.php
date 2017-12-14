@@ -147,6 +147,7 @@ class BitstampTest extends TestCase
     public function testOrderExecutions()
     {
         $this->assertTrue(self::$mkt instanceof Bitstamp);
+        $this->markTestSkipped();
         $response = self::$mkt->buy(CurrencyPair::BTCEUR, 0.01, 100000);
         sleep(1);
         $exs = self::$mkt->getOrderExecutions($response);

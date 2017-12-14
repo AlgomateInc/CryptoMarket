@@ -152,6 +152,21 @@ class GeminiTest extends TestCase
         }
     }
 
+    public function testTickers()
+    {
+        $res = self::$mkt->tickers();
+        var_dump($res);
+        $this->assertNotNull($res);
+    }
+
+    public function testDepth()
+    {
+        foreach (self::$mkt->supportedCurrencyPairs() as $pair) {
+            $res = self::$mkt->depth($pair);
+            $this->assertNotNull($res);
+        }
+    }
+
     private function checkAndCancelOrder($response)
     {
         $this->assertNotNull($response);

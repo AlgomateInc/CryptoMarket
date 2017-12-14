@@ -161,6 +161,7 @@ class PoloniexTest extends TestCase
     public function testOrderExecutions()
     {
         $this->assertTrue(self::$mkt instanceof Poloniex);
+        $this->markTestSkipped();
         $response = self::$mkt->buy(CurrencyPair::XCPBTC, 1, 1);
         $oe = self::$mkt->getOrderExecutions($response);
 

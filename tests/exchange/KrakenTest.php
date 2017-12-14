@@ -109,14 +109,15 @@ class KrakenTest extends TestCase
     public function testOrderSubmitAndCancel()
     {
         $this->assertTrue(self::$mkt instanceof Kraken);
-        $res = self::$mkt->sell(CurrencyPair::ETHBTC, 0.1, 0.001);
+        $res = self::$mkt->sell(CurrencyPair::BTCUSD, 0.01, 30000);
         $this->checkAndCancelOrder($res);
     }
 
     public function testOrderSubmitAndExecute()
     {
         $this->assertTrue(self::$mkt instanceof Kraken);
-        $res = self::$mkt->sell(CurrencyPair::ETHBTC, 0.1, 0.001);
+        $this->markTestSkipped();
+        $res = self::$mkt->sell(CurrencyPair::ETHBTC, 0.01, 0.001);
         $this->assertTrue(self::$mkt->isOrderAccepted($res));
         sleep(1);
         $this->assertFalse(self::$mkt->isOrderOpen($res));

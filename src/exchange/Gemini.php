@@ -162,6 +162,11 @@ class Gemini extends Bitfinex
         return $this->tradingFee($pair, $tradingRole, $tradingVolume) - $rebate;
     }
 
+    public function tickers()
+    {
+        return BaseExchange::tickers();
+    }
+
     public function ticker($pair)
     {
         $tickerData = CurlHelper::query($this->getApiUrl() . 'pubticker' . '/' . $pair);
