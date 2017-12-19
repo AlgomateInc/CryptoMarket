@@ -143,7 +143,7 @@ class BitfinexTest extends TestCase
     {
         if (self::$mkt instanceof Bitfinex)
         {
-            $response = self::$mkt->sell(CurrencyPair::BTCUSD, 1, 20000);
+            $response = self::$mkt->sell(CurrencyPair::BTCUSD, 0.01, 30000);
             $this->checkAndCancelOrder($response);
         }
     }

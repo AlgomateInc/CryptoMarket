@@ -195,6 +195,12 @@ class GdaxTest extends TestCase
         }
     }
 
+    public function testDepth()
+    {
+        $depth = self::$mkt->depth(CurrencyPair::BTCUSD);
+        $this->assertNotNull($depth);
+    }
+
     private function checkAndCancelOrder($response)
     {
         $this->assertNotNull($response);
