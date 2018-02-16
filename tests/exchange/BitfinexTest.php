@@ -190,6 +190,7 @@ class BitfinexTest extends TestCase
         $this->assertNotNull($response);
         $this->assertTrue(self::$mkt->isOrderOpen($response));
         $this->assertNotNull(self::$mkt->cancel($response['order_id']));
+        sleep(1);
         $this->assertFalse(self::$mkt->isOrderOpen($response));
     }
 }

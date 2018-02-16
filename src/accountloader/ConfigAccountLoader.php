@@ -9,7 +9,6 @@ use CryptoMarket\Account\BitcoinCashAddress;
 use CryptoMarket\Account\BitcoinGoldAddress;
 use CryptoMarket\Account\EthereumAccount;
 use CryptoMarket\Account\EthereumClassicAccount;
-use CryptoMarket\Account\JPMChase;
 
 use CryptoMarket\Exchange\ExchangeName;
 use CryptoMarket\Exchange\Bitfinex;
@@ -63,14 +62,6 @@ class ConfigAccountLoader implements IAccountLoader
                     $accounts[ExchangeName::Btce] = new Btce(
                         $mktConfig['key'],
                         $mktConfig['secret']
-                    );
-                    break;
-
-                case ExchangeName::JPMChase:
-                    $accounts[ExchangeName::JPMChase] = new JPMChase(
-                        $mktConfig['name'],
-                        $mktConfig['username'],
-                        $mktConfig['password']
                     );
                     break;
 

@@ -25,11 +25,6 @@ class ConfigDataExample
 //            'key' => '',
 //            'secret' => '',
 //        ),
-//      'JPMChase' => array(
-//          'name' => 'imapmailbox',
-//          'username' => 'username',
-//          'password' => 'password'
-//      ),
         'Gdax'=> array(
             'key' => '',
             'secret' => '',

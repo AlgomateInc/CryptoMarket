@@ -19,7 +19,5 @@ class ExchangeName
     const BitcoinGold = 'BitcoinGold';
     const Ethereum = 'Ethereum';
     const EthereumClassic = 'EthClassic';
-
-    const JPMChase = 'JPMChase';
 }
 
