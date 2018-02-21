@@ -4,8 +4,9 @@ namespace CryptoMarket\Exchange;
 
 use CryptoMarket\Helper\CurlHelper;
 use CryptoMarket\Helper\DateHelper;
+use CryptoMarket\Helper\NonceFactory;
 
-use CryptoMarket\Exchange\BtceStyleExchange;
+use CryptoMarket\Exchange\BaseExchange;
 use CryptoMarket\Exchange\ExchangeName;
 use CryptoMarket\Exchange\ILifecycleHandler;
 
@@ -21,28 +22,36 @@ use CryptoMarket\Record\TransactionType;
 
 use MongoDB\BSON\UTCDateTime;
 
-class Btce extends BtceStyleExchange implements ILifecycleHandler
+class Wex extends BaseExchange implements ILifecycleHandler
 {
+    private $key;
+    private $secret;
+    private $nonceFactory;
+
     private $supportedPairs = array(); //associative, pair->productId
     private $minOrderSizes = array(); //associative, pair->size
     private $quotePrecisions = array(); //associative, pair->precision
     private $minPrices = array(); //associative, pair->minPrice
     private $feeSchedule; //FeeSchedule
 
-    protected function getAuthQueryUrl(){
-        return 'https://btc-e.com/tapi/';
+    public function __construct($key, $secret){
+        $this->key = $key;
+        $this->secret = $secret;
+
+        $this->nonceFactory = new NonceFactory(false);
     }
 
     public function Name(){
-        return "Btce";
+        return "Wex";
     }
 
     function init()
     {
         $this->feeSchedule = new FeeSchedule();
-        $marketsInfo = CurlHelper::query('https://btc-e.com/api/3/info');
+        $marketsInfo = CurlHelper::query('https://wex.nz/api/3/info');
         foreach($marketsInfo['pairs'] as $pair => $info){
-            $pairName = mb_strtoupper(str_replace('_', '', $pair));
+            $parts = explode('_', mb_strtoupper($pair));
+            $pairName = CurrencyPair::MakePair($parts[0], $parts[1]);
             $this->supportedPairs[$pairName] = $pair;
             $this->minOrderSizes[$pairName] = $info['min_amount'];
             $this->quotePrecisions[$pairName] = $info['decimal_places'];
@@ -53,11 +62,11 @@ class Btce extends BtceStyleExchange implements ILifecycleHandler
 
     public function balances()
     {
-        $btce_info = $this->assertSuccessResponse($this->authQuery("getInfo"));
+        $wex_info = $this->assertSuccessResponse($this->authQuery("getInfo"));
 
         $balances = array();
         foreach($this->supportedCurrencies() as $curr){
-            $balances[$curr] = $btce_info['funds'][mb_strtolower($curr)];
+            $balances[$curr] = $wex_info['funds'][mb_strtolower($curr)];
         }
 
         return $balances;
@@ -108,16 +117,16 @@ class Btce extends BtceStyleExchange implements ILifecycleHandler
 
     public function depth($currencyPair)
     {
-        $d = CurlHelper::query('https://btc-e.com/api/2/' . $this->getCurrencyPairName($currencyPair) . '/depth');
+        $d = CurlHelper::query('https://wex.nz/api/2/' . $this->getCurrencyPairName($currencyPair) . '/depth');
 
         return new OrderBook($d);
     }
 
     public function ticker($pair)
     {
-        $btcePairName = $this->getCurrencyPairName($pair);
+        $wexPairName = $this->getCurrencyPairName($pair);
 
-        $rawTick = CurlHelper::query("https://btc-e.com/api/2/$btcePairName/ticker");
+        $rawTick = CurlHelper::query("https://wex.nz/api/2/$wexPairName/ticker");
 
         $t = new Ticker();
         $t->currencyPair = $pair;
@@ -146,28 +155,28 @@ class Btce extends BtceStyleExchange implements ILifecycleHandler
 
     private function executeTrade($pair, $quantity, $price, $side)
     {
-        $btcePairName = $this->getCurrencyPairName($pair);
+        $wexPairName = $this->getCurrencyPairName($pair);
 
-        $btce_result = $this->authQuery("Trade", array("pair" => "$btcePairName", "type" => $side,
+        $wex_result = $this->authQuery("Trade", array("pair" => "$wexPairName", "type" => $side,
             "amount" => $quantity, "rate" => $price ));
 
         //add custom fields to success response since they are useful in other places
-        //wish btce did this for us...
-        if($this->isOrderAccepted($btce_result)){
-            $btce_result['return']['price'] = $price;
-            $btce_result['return']['timestamp'] = time();
+        //wish wex did this for us...
+        if($this->isOrderAccepted($wex_result)){
+            $wex_result['return']['price'] = $price;
+            $wex_result['return']['timestamp'] = time();
 
-            //if order_id was not assigned by btce, make our own, deterministically
-            if($btce_result['return']['order_id'] == 0)
-                $btce_result['return']['order_id'] = 'ZeroOrderId' . sha1(json_encode($btce_result));
+            //if order_id was not assigned by wex, make our own, deterministically
+            if($wex_result['return']['order_id'] == 0)
+                $wex_result['return']['order_id'] = 'ZeroOrderId' . sha1(json_encode($wex_result));
         }
 
-        return $btce_result;
+        return $wex_result;
     }
 
     public function activeOrders()
     {
-        return $this->authQuery("ActiveOrders", array("pair" => "btc_usd"));
+        return $this->authQuery("ActiveOrders");
     }
 
     public function hasActiveOrders()
@@ -235,7 +244,7 @@ class Btce extends BtceStyleExchange implements ILifecycleHandler
                     continue;
 
                 $tx = new Transaction();
-                $tx->exchange = ExchangeName::Btce;
+                $tx->exchange = ExchangeName::Wex;
                 $tx->id = $btxid;
                 $tx->type = ($btx['type'] == 1)? TransactionType::Credit: TransactionType::Debit;
                 $tx->currency = $btx['currency'];
@@ -263,7 +272,7 @@ class Btce extends BtceStyleExchange implements ILifecycleHandler
                 continue;
 
             $tx = new Transaction();
-            $tx->exchange = ExchangeName::Btce;
+            $tx->exchange = ExchangeName::Wex;
             $tx->id = $btxid;
             $tx->type = ($btx['type'] == 1)? TransactionType::Credit: TransactionType::Debit;
             $tx->currency = $btx['currency'];
@@ -350,6 +359,39 @@ class Btce extends BtceStyleExchange implements ILifecycleHandler
         }
 
         return $execList;
+    }
+
+    private function assertSuccessResponse($response)
+    {
+        if($response['success'] != 1)
+            throw new \Exception($response['error']);
+
+        return $response['return'];
+    }
+
+    private function authQuery($method, array $req = array()) {
+        if(!$this->nonceFactory instanceof NonceFactory)
+            throw new \Exception('No way to get nonce!');
+
+        $req['method'] = $method;
+        $req['nonce'] = $this->nonceFactory->get();
+
+        // generate the POST data string
+        $post_data = http_build_query($req, '', '&');
+
+        $sign = hash_hmac("sha512", $post_data, $this->secret);
+
+        // generate the extra headers
+        $headers = array(
+            'Sign: '.$sign,
+            'Key: '.$this->key,
+        );
+
+        return CurlHelper::query($this->getAuthQueryUrl(), $post_data, $headers);
+    }
+    
+    private function getAuthQueryUrl(){
+        return 'https://wex.nz/tapi';
     }
 
 }

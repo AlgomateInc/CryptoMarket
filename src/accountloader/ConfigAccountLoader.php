@@ -14,11 +14,11 @@ use CryptoMarket\Exchange\ExchangeName;
 use CryptoMarket\Exchange\Bitfinex;
 use CryptoMarket\Exchange\Bitstamp;
 use CryptoMarket\Exchange\BitVC;
-use CryptoMarket\Exchange\Btce;
 use CryptoMarket\Exchange\Gdax;
 use CryptoMarket\Exchange\Gemini;
 use CryptoMarket\Exchange\Kraken;
 use CryptoMarket\Exchange\Poloniex;
+use CryptoMarket\Exchange\Wex;
 use CryptoMarket\Exchange\Yunbi;
 
 class ConfigAccountLoader implements IAccountLoader
@@ -53,13 +53,6 @@ class ConfigAccountLoader implements IAccountLoader
                 case ExchangeName::Bitstamp:
                     $accounts[ExchangeName::Bitstamp] = new Bitstamp(
                         $mktConfig['custid'],
-                        $mktConfig['key'],
-                        $mktConfig['secret']
-                    );
-                    break;
-
-                case ExchangeName::Btce:
-                    $accounts[ExchangeName::Btce] = new Btce(
                         $mktConfig['key'],
                         $mktConfig['secret']
                     );
@@ -105,6 +98,13 @@ class ConfigAccountLoader implements IAccountLoader
                         $mktConfig['key'],
                         $mktConfig['secret'],
                         $mktConfig['passphrase']
+                    );
+                    break;
+
+                case ExchangeName::Wex:
+                    $accounts[ExchangeName::Wex] = new Wex(
+                        $mktConfig['key'],
+                        $mktConfig['secret']
                     );
                     break;
 

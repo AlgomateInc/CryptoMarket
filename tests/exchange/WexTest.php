@@ -17,12 +17,12 @@ use CryptoMarketTest\ConfigData;
 use CryptoMarket\AccountLoader\ConfigAccountLoader;
 
 use CryptoMarket\Exchange\ExchangeName;
-use CryptoMarket\Exchange\Btce;
+use CryptoMarket\Exchange\Wex;
 
 use CryptoMarket\Record\CurrencyPair;
 use CryptoMarket\Record\TradingRole;
 
-class BtceTest extends TestCase
+class WexTest extends TestCase
 {
     protected $mkt;
     public function setUp()
@@ -30,14 +30,13 @@ class BtceTest extends TestCase
         error_reporting(error_reporting() ^ E_NOTICE);
 
         $cal = new ConfigAccountLoader(ConfigData::ACCOUNTS_CONFIG);
-        $exchanges = $cal->getAccounts(array(ExchangeName::Btce));
-        $this->mkt = $exchanges[ExchangeName::Btce];
+        $exchanges = $cal->getAccounts(array(ExchangeName::Wex));
+        $this->mkt = $exchanges[ExchangeName::Wex];
         $this->mkt->init();
     }
 
     public function testBalances()
     {
-        $this->assertTrue($this->mkt instanceof Btce);
         $currs = $this->mkt->supportedCurrencies();
         $bal = $this->mkt->balances();
         foreach ($bal as $pair=>$amt) {
@@ -48,7 +47,6 @@ class BtceTest extends TestCase
 
     public function testFees()
     {
-        $this->assertTrue($this->mkt instanceof Btce);
         foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
             $this->assertEquals(0.2, $this->mkt->currentTradingFee($pair, TradingRole::Taker));
             $this->assertEquals(0.2, $this->mkt->currentTradingFee($pair, TradingRole::Maker));
@@ -58,7 +56,6 @@ class BtceTest extends TestCase
 
     public function testFeeSchedule()
     {
-        $this->assertTrue($this->mkt instanceof Btce);
         $schedule = $this->mkt->currentFeeSchedule();
         foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
             $taker = $schedule->getFee($pair, TradingRole::Taker);
@@ -71,7 +68,6 @@ class BtceTest extends TestCase
 
     public function testPrecisions()
     {
-        $this->assertTrue($this->mkt instanceof Btce);
         foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
             $ticker = $this->mkt->ticker($pair);
             $precision = $this->mkt->quotePrecision($pair, $ticker->bid);
@@ -84,7 +80,6 @@ class BtceTest extends TestCase
 
     public function testMinOrders()
     {
-        $this->assertTrue($this->mkt instanceof Btce);
         foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
             $ticker = $this->mkt->ticker($pair);
             $quotePrecision = $this->mkt->quotePrecision($pair, $ticker->bid);
@@ -98,7 +93,6 @@ class BtceTest extends TestCase
 
     public function testBasePrecision()
     {
-        $this->assertTrue($this->mkt instanceof Btce);
         foreach ($this->mkt->supportedCurrencyPairs() as $pair) {
             $ticker = $this->mkt->ticker($pair);
             $quotePrecision = $this->mkt->quotePrecision($pair, $ticker->bid);
@@ -116,7 +110,7 @@ class BtceTest extends TestCase
 
     public function testBTCEUROrder()
     {
-        $res = $this->mkt->sell(CurrencyPair::BTCEUR, 0.01, 3000.12345);
+        $res = $this->mkt->sell(CurrencyPair::BTCEUR, 0.01, 20000.12345);
         $this->assertTrue($this->mkt->isOrderAccepted($res));
         sleep(1);
         $cres = $this->mkt->cancel($res['return']['order_id']);
@@ -132,13 +126,10 @@ class BtceTest extends TestCase
 
     public function testTradeHistory()
     {
-        if ($this->mkt instanceof Btce)
-        {
-            $res = $this->mkt->tradeHistory(5);
+        $res = $this->mkt->tradeHistory(5);
 
-            $this->assertTrue(is_array($res));
-            $this->assertCount(5, $res);
-        }
+        $this->assertTrue(is_array($res));
+        $this->assertCount(2, $res);
     }
 
     private function checkAndCancelOrder($response)

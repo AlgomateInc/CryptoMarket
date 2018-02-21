@@ -66,11 +66,11 @@ IAccountLoader and then use its "getAccounts" function, providing an array of
 
   * Bitfinex
   * Bitstamp
-  * Btc-e (RIP)
   * GDAX
   * Gemini
   * Kraken
   * Poloniex
+  * Wex
   * Yunbi (RIP)
 
 ## IAccountLoader Implementations
