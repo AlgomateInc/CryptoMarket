@@ -132,13 +132,13 @@ class Gdax extends BaseExchange implements ILifecycleHandler
 
         // For taker fees, first get the total traded volume for the pair over 
         // the last 30 days, then have given volume as a percentage.
-        $SECONDS_PER_THIRTY = 30 * 24 * 60 * 60;
-        $SECONDS_PER_TEN = 10 * 24 * 60 * 60; // larger granularities fail
+        $SECONDS_PER_THIRTY_DAYS = 30 * 24 * 60 * 60;
+        $SECONDS_PER_DAY = 24 * 60 * 60; // larger granularities not allowed
         $FORMAT = "Y-m-d";
         $nowTs = date($FORMAT, time());
-        $prevTs = date($FORMAT, time() - $SECONDS_PER_THIRTY);
+        $prevTs = date($FORMAT, time() - $SECONDS_PER_THIRTY_DAYS);
         $query = '/products/' . $this->productIds[$pair] . 
-            "/candles?start=$prevTs&end=$nowTs&granularity=$SECONDS_PER_TEN";
+            "/candles?start=$prevTs&end=$nowTs&granularity=$SECONDS_PER_DAY";
         $candles = $this->publicQuery($query);
         $totalVolume = 0.0;
         foreach ($candles as $candle){

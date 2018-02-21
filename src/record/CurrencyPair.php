@@ -7,6 +7,9 @@ class CurrencyPair
     // Crypto currency pairs
     const BTCUSD = 'BTCUSD';
     const BTCEUR = 'BTCEUR';
+    const BCHUSD = 'BCHUSD';
+    const BCHEUR = 'BCHEUR';
+    const BCHBTC = 'BCHBTC';
     const XRPUSD = 'XRPUSD';
     const XRPEUR = 'XRPEUR';
     const XRPBTC = 'XRPBTC';

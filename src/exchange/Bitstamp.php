@@ -59,7 +59,10 @@ class Bitstamp extends BaseExchange implements ILifecycleHandler
             CurrencyPair::LTCBTC,
             CurrencyPair::ETHUSD,
             CurrencyPair::ETHEUR,
-            CurrencyPair::ETHBTC);
+            CurrencyPair::ETHBTC,
+            CurrencyPair::BCHUSD,
+            CurrencyPair::BCHEUR,
+            CurrencyPair::BCHBTC);
         foreach($this->supportedPairs as $pair) {
             $this->productIds[$pair] = mb_strtolower($pair);
         }

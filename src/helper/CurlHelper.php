@@ -35,7 +35,7 @@ class CurlHelper
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
             curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-            curl_setopt($ch, CURLOPT_FAILONERROR, false); // set to false for debugging error messages in response
+            curl_setopt($ch, CURLOPT_FAILONERROR, true); // set to false for debugging error messages in response
             curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; PHP client; '.php_uname('s').'; PHP/'.phpversion().')');
         }
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -52,7 +52,6 @@ class CurlHelper
         curl_setopt($ch, CURLOPT_HEADER, $return_headers);
 
         $res = curl_exec($ch);
-        var_dump($res);
         if ($res === false) {
             throw new \Exception('Could not get reply: '.curl_error($ch));
         }

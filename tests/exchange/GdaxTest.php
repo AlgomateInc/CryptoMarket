@@ -113,7 +113,7 @@ class GdaxTest extends TestCase
     public function testFees()
     {
         $this->assertTrue(self::$mkt instanceof Gdax);
-        $this->assertEquals(0.19, self::$mkt->tradingFee(CurrencyPair::BTCEUR, TradingRole::Taker, 10000.0));
+        $this->assertEquals(0.1, self::$mkt->tradingFee(CurrencyPair::BTCEUR, TradingRole::Taker, 10000.0));
         sleep(1);
         $this->assertEquals(0.30, self::$mkt->tradingFee(CurrencyPair::BTCEUR, TradingRole::Taker, 10.0));
         sleep(1);

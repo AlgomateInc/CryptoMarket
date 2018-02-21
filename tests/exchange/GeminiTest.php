@@ -155,7 +155,6 @@ class GeminiTest extends TestCase
     public function testTickers()
     {
         $res = self::$mkt->tickers();
-        var_dump($res);
         $this->assertNotNull($res);
     }
 
