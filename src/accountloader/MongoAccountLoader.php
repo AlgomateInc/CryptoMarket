@@ -4,7 +4,7 @@ namespace CryptoMarket\AccountLoader;
 
 use CryptoMarket\AccountLoader\IAccountLoader;
 
-use Mongodb\Client;
+use MongoDB\Client;
 
 class MongoAccountLoader extends ConfigAccountLoader
 {
@@ -26,9 +26,9 @@ class MongoAccountLoader extends ConfigAccountLoader
         $this->mongo = new Client($mongodbUri);
         $this->mdb = $this->mongo->selectDatabase($mongodbName);
 
-        if ($serverName === null) {
-            $serverName = gethostname();
-        }
+        //if ($serverName === null) {
+        //    $serverName = gethostname();
+        //}
         $this->serverName = $serverName;
     }
 

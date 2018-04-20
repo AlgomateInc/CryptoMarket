@@ -25,11 +25,15 @@ class OrderBook
 
                 if(isset($item['price']))
                     $b->price = $item['price'];
+                elseif (isset($item['Rate']))
+                    $b->price = $item['Rate'];
                 else
                     $b->price = $item[0];
 
                 if(isset($item['amount']))
                     $b->quantity = $item['amount'];
+                elseif (isset($item['Quantity']))
+                    $b->quantity = $item['Quantity'];
                 else
                     $b->quantity = $item[1];
 
