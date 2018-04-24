@@ -4,14 +4,16 @@ namespace CryptoMarket\Exchange;
 
 class ExchangeName
 {
+    const Binance = 'Binance';
     const Bitfinex = 'Bitfinex';
     const Bitstamp = 'Bitstamp';
+    const Bittrex = 'Bittrex';
     const BitVC = 'BitVC';
-    const Gdax = 'Gdax';
+    const GDAX = 'GDAX';
     const Gemini = 'Gemini';
     const Kraken = 'Kraken';
     const Poloniex = 'Poloniex';
-    const Wex = 'Wex';
+    const WEX = 'WEX';
     const Yunbi = 'Yunbi';
 
     const Bitcoin = 'Bitcoin';

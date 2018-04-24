@@ -17,7 +17,7 @@ use CryptoMarketTest\ConfigData;
 use CryptoMarket\AccountLoader\ConfigAccountLoader;
 
 use CryptoMarket\Exchange\ExchangeName;
-use CryptoMarket\Exchange\Wex;
+use CryptoMarket\Exchange\WEX;
 
 use CryptoMarket\Record\CurrencyPair;
 use CryptoMarket\Record\TradingRole;
@@ -30,8 +30,8 @@ class WexTest extends TestCase
         error_reporting(error_reporting() ^ E_NOTICE);
 
         $cal = new ConfigAccountLoader(ConfigData::ACCOUNTS_CONFIG);
-        $exchanges = $cal->getAccounts(array(ExchangeName::Wex));
-        $this->mkt = $exchanges[ExchangeName::Wex];
+        $exchanges = $cal->getAccounts(array(ExchangeName::WEX));
+        $this->mkt = $exchanges[ExchangeName::WEX];
         $this->mkt->init();
     }
 

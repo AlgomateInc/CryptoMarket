@@ -22,7 +22,7 @@ use CryptoMarket\Record\TransactionType;
 
 use MongoDB\BSON\UTCDateTime;
 
-class Wex extends BaseExchange implements ILifecycleHandler
+class WEX extends BaseExchange implements ILifecycleHandler
 {
     private $key;
     private $secret;
@@ -42,7 +42,7 @@ class Wex extends BaseExchange implements ILifecycleHandler
     }
 
     public function Name(){
-        return "Wex";
+        return "WEX";
     }
 
     function init()
@@ -244,7 +244,7 @@ class Wex extends BaseExchange implements ILifecycleHandler
                     continue;
 
                 $tx = new Transaction();
-                $tx->exchange = ExchangeName::Wex;
+                $tx->exchange = ExchangeName::WEX;
                 $tx->id = $btxid;
                 $tx->type = ($btx['type'] == 1)? TransactionType::Credit: TransactionType::Debit;
                 $tx->currency = $btx['currency'];
@@ -272,7 +272,7 @@ class Wex extends BaseExchange implements ILifecycleHandler
                 continue;
 
             $tx = new Transaction();
-            $tx->exchange = ExchangeName::Wex;
+            $tx->exchange = ExchangeName::WEX;
             $tx->id = $btxid;
             $tx->type = ($btx['type'] == 1)? TransactionType::Credit: TransactionType::Debit;
             $tx->currency = $btx['currency'];

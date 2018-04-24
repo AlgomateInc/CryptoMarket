@@ -31,7 +31,7 @@ use MongoDB\BSON\UTCDateTime;
  * Time: 6:31 AM
  */
 
-class Gdax extends BaseExchange implements ILifecycleHandler
+class GDAX extends BaseExchange implements ILifecycleHandler
 {
     private $key;
     private $secret;
@@ -104,7 +104,7 @@ class Gdax extends BaseExchange implements ILifecycleHandler
 
     public function Name()
     {
-        return 'Gdax';
+        return 'GDAX';
     }
 
     public function balances()
@@ -215,7 +215,7 @@ class Gdax extends BaseExchange implements ILifecycleHandler
                     }
 
                     $tx = new Transaction();
-                    $tx->exchange = ExchangeName::Gdax;
+                    $tx->exchange = ExchangeName::GDAX;
                     $tx->id = $entry['id'];
                     if (array_key_exists('details', $entry) &&
                         array_key_exists('transfer_type', $entry['details'])) {

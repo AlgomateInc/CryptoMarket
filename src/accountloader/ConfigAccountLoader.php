@@ -13,12 +13,13 @@ use CryptoMarket\Account\EthereumClassicAccount;
 use CryptoMarket\Exchange\ExchangeName;
 use CryptoMarket\Exchange\Bitfinex;
 use CryptoMarket\Exchange\Bitstamp;
+use CryptoMarket\Exchange\Bittrex;
 use CryptoMarket\Exchange\BitVC;
-use CryptoMarket\Exchange\Gdax;
+use CryptoMarket\Exchange\GDAX;
 use CryptoMarket\Exchange\Gemini;
 use CryptoMarket\Exchange\Kraken;
 use CryptoMarket\Exchange\Poloniex;
-use CryptoMarket\Exchange\Wex;
+use CryptoMarket\Exchange\WEX;
 use CryptoMarket\Exchange\Yunbi;
 
 class ConfigAccountLoader implements IAccountLoader
@@ -50,6 +51,13 @@ class ConfigAccountLoader implements IAccountLoader
 
             switch ($mktName)
             {
+                case ExchangeName::Binance:
+                    $accounts[ExchangeName::Binance] = new Binance(
+                        $mktConfig['key'],
+                        $mktConfig['secret']
+                    );
+                    break;
+
                 case ExchangeName::Bitstamp:
                     $accounts[ExchangeName::Bitstamp] = new Bitstamp(
                         $mktConfig['custid'],
@@ -60,6 +68,13 @@ class ConfigAccountLoader implements IAccountLoader
 
                 case ExchangeName::Bitfinex:
                     $accounts[ExchangeName::Bitfinex] = new Bitfinex(
+                        $mktConfig['key'],
+                        $mktConfig['secret']
+                    );
+                    break;
+
+                case ExchangeName::Bittrex:
+                    $accounts[ExchangeName::Bittrex] = new Bittrex(
                         $mktConfig['key'],
                         $mktConfig['secret']
                     );
@@ -93,16 +108,16 @@ class ConfigAccountLoader implements IAccountLoader
                     );
                     break;
 
-                case ExchangeName::Gdax:
-                    $accounts[ExchangeName::Gdax] = new Gdax(
+                case ExchangeName::GDAX:
+                    $accounts[ExchangeName::GDAX] = new GDAX(
                         $mktConfig['key'],
                         $mktConfig['secret'],
                         $mktConfig['passphrase']
                     );
                     break;
 
-                case ExchangeName::Wex:
-                    $accounts[ExchangeName::Wex] = new Wex(
+                case ExchangeName::WEX:
+                    $accounts[ExchangeName::WEX] = new WEX(
                         $mktConfig['key'],
                         $mktConfig['secret']
                     );

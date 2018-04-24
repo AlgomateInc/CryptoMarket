@@ -19,16 +19,12 @@ class MongoAccountLoader extends ConfigAccountLoader
         $mongodbUri,
         $mongodbName,
         $accountsConfig,
-        $serverName = null)
+        $serverName)
     {
         parent::__construct($accountsConfig);
 
         $this->mongo = new Client($mongodbUri);
         $this->mdb = $this->mongo->selectDatabase($mongodbName);
-
-        //if ($serverName === null) {
-        //    $serverName = gethostname();
-        //}
         $this->serverName = $serverName;
     }
 

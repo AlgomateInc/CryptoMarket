@@ -16,7 +16,7 @@ use CryptoMarketTest\ConfigData;
 use CryptoMarket\AccountLoader\ConfigAccountLoader;
 
 use CryptoMarket\Exchange\ExchangeName;
-use CryptoMarket\Exchange\Gdax;
+use CryptoMarket\Exchange\GDAX;
 
 use CryptoMarket\Record\CurrencyPair;
 use CryptoMarket\Record\TradingRole;
@@ -28,8 +28,8 @@ class GdaxTest extends TestCase
     public static function setUpBeforeClass()
     {
         $cal = new ConfigAccountLoader(ConfigData::ACCOUNTS_CONFIG);
-        $exchanges = $cal->getAccounts(array(ExchangeName::Gdax));
-        self::$mkt = $exchanges[ExchangeName::Gdax];
+        $exchanges = $cal->getAccounts(array(ExchangeName::GDAX));
+        self::$mkt = $exchanges[ExchangeName::GDAX];
         self::$mkt->init();
     }
 
@@ -40,7 +40,7 @@ class GdaxTest extends TestCase
 
     public function testSupportedPairs()
     {
-        $this->assertTrue(self::$mkt instanceof Gdax);
+        $this->assertTrue(self::$mkt instanceof GDAX);
         $known_pairs = array("BTCGBP","BTCEUR","ETHUSD","ETHBTC","LTCUSD", "LTCBTC", "BTCUSD");
         foreach ($known_pairs as $pair) {
             $this->assertTrue(self::$mkt->supports($pair));
@@ -53,7 +53,7 @@ class GdaxTest extends TestCase
 
     public function testPrecisions()
     {
-        $this->assertTrue(self::$mkt instanceof Gdax);
+        $this->assertTrue(self::$mkt instanceof GDAX);
         foreach (self::$mkt->supportedCurrencyPairs() as $pair) {
             $ticker = self::$mkt->ticker($pair);
             $precision = self::$mkt->quotePrecision($pair, $ticker->bid);
@@ -65,7 +65,7 @@ class GdaxTest extends TestCase
 
     public function testMinOrders()
     {
-        $this->assertTrue(self::$mkt instanceof Gdax);
+        $this->assertTrue(self::$mkt instanceof GDAX);
         $this->markTestSkipped();
         $availablePairsInUSA = array("ETHUSD","ETHBTC","LTCUSD", "LTCBTC", "BTCUSD");
         foreach ($availablePairsInUSA as $pair) {
@@ -80,7 +80,7 @@ class GdaxTest extends TestCase
 
     public function testBasePrecision()
     {
-        $this->assertTrue(self::$mkt instanceof Gdax);
+        $this->assertTrue(self::$mkt instanceof GDAX);
         $this->markTestSkipped();
         $availablePairsInUSA = array("ETHUSD","ETHBTC","LTCUSD", "LTCBTC", "BTCUSD");
         foreach ($availablePairsInUSA as $pair) {
@@ -100,7 +100,7 @@ class GdaxTest extends TestCase
 
     public function testBalances()
     {
-        $this->assertTrue(self::$mkt instanceof Gdax);
+        $this->assertTrue(self::$mkt instanceof GDAX);
         $currencies = self::$mkt->supportedCurrencies();
         $ret = self::$mkt->balances();
         foreach($ret as $curr=>$amt) {
@@ -112,7 +112,7 @@ class GdaxTest extends TestCase
 
     public function testFees()
     {
-        $this->assertTrue(self::$mkt instanceof Gdax);
+        $this->assertTrue(self::$mkt instanceof GDAX);
         $this->assertEquals(0.1, self::$mkt->tradingFee(CurrencyPair::BTCEUR, TradingRole::Taker, 10000.0));
         sleep(1);
         $this->assertEquals(0.30, self::$mkt->tradingFee(CurrencyPair::BTCEUR, TradingRole::Taker, 10.0));
@@ -126,7 +126,7 @@ class GdaxTest extends TestCase
 
     public function testUserFees()
     {
-        $this->assertTrue(self::$mkt instanceof Gdax);
+        $this->assertTrue(self::$mkt instanceof GDAX);
         $this->assertEquals(0.30, self::$mkt->currentTradingFee(CurrencyPair::BTCEUR, TradingRole::Taker));
         sleep(1);
         $this->assertEquals(0.0, self::$mkt->currentTradingFee(CurrencyPair::BTCUSD, TradingRole::Maker));
@@ -136,7 +136,7 @@ class GdaxTest extends TestCase
 
     public function testFeeSchedule()
     {
-        $this->assertTrue(self::$mkt instanceof Gdax);
+        $this->assertTrue(self::$mkt instanceof GDAX);
         $schedule = self::$mkt->currentFeeSchedule();
         foreach (self::$mkt->supportedCurrencyPairs() as $pair) {
             $taker = $schedule->getFee($pair, TradingRole::Taker);
@@ -148,21 +148,21 @@ class GdaxTest extends TestCase
 
     public function testBuyOrderSubmission()
     {
-        $this->assertTrue(self::$mkt instanceof Gdax);
+        $this->assertTrue(self::$mkt instanceof GDAX);
         $ret = self::$mkt->buy(CurrencyPair::BTCUSD, 0.01, 1000.00);
         $this->checkAndCancelOrder($ret);
     }
 
     public function testSellOrderSubmission()
     {
-        $this->assertTrue(self::$mkt instanceof Gdax);
+        $this->assertTrue(self::$mkt instanceof GDAX);
         $ret = self::$mkt->sell(CurrencyPair::BTCUSD, 0.01, 1000000);
         $this->checkAndCancelOrder($ret);
     }
 
     public function testMyTrades()
     {
-        $this->assertTrue(self::$mkt instanceof Gdax);
+        $this->assertTrue(self::$mkt instanceof GDAX);
         $res = self::$mkt->tradeHistory(1000);
         $this->assertNotNull($res);
         // because of pagination, make sure we get over 100
@@ -171,7 +171,7 @@ class GdaxTest extends TestCase
 
     public function testExecutions()
     {
-        $this->assertTrue(self::$mkt instanceof Gdax);
+        $this->assertTrue(self::$mkt instanceof GDAX);
         $this->markTestSkipped();
         $ret = self::$mkt->submitMarketOrder('sell', CurrencyPair::BTCUSD, 0.01);
         sleep(1);
@@ -185,11 +185,11 @@ class GdaxTest extends TestCase
 
     public function testTransactions()
     {
-        $this->assertTrue(self::$mkt instanceof Gdax);
+        $this->assertTrue(self::$mkt instanceof GDAX);
         $transactions = self::$mkt->transactions();
         $this->assertNotEmpty($transactions);
         foreach ($transactions as $trans) {
-            $this->assertEquals("Gdax", $trans->exchange);
+            $this->assertEquals("GDAX", $trans->exchange);
             $this->assertTrue($trans instanceof Transaction);
             $this->assertTrue($trans->isValid());
         }

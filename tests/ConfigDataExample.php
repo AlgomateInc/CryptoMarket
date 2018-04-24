@@ -8,10 +8,6 @@ class ConfigDataExample
     const MONGODB_DBNAME = 'coindata';
 
     const ACCOUNTS_CONFIG = array(
-//        'Btce' => array(
-//            'key' => '',
-//            'secret' => ''
-//        ),
         'Bitfinex'=> array(
             'key' => '',
             'secret' => ''
@@ -25,7 +21,7 @@ class ConfigDataExample
 //            'key' => '',
 //            'secret' => '',
 //        ),
-        'Gdax'=> array(
+        'GDAX'=> array(
             'key' => '',
             'secret' => '',
             'passphrase' =>''

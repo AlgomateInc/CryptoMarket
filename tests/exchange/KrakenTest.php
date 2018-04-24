@@ -137,6 +137,17 @@ class KrakenTest extends TestCase
         }
     }
 
+    public function testBalances()
+    {
+        $currencies = self::$mkt->supportedCurrencies();
+        $ret = self::$mkt->balances();
+        foreach($ret as $curr=>$amt) {
+            $this->assertTrue(in_array($curr, $currencies));
+            $this->assertTrue(is_numeric($amt));
+        }
+        $this->assertNotEmpty($ret);
+    }
+
     private function checkAndCancelOrder($response)
     {
         $this->assertTrue(self::$mkt->isOrderAccepted($response));
