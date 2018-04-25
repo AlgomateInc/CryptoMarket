@@ -30,7 +30,6 @@ class Bittrex extends BaseExchange implements ILifecycleHandler
     private $supported_pairs = array();
     private $min_order_sizes = array(); //assoc array pair->minordersize
     private $product_ids = array(); //assoc array pair->productid
-    private $quotePrecisions = array(); //assoc array pair->quotePrecision
 
     public function __construct($key, $secret)
     {
@@ -81,6 +80,7 @@ class Bittrex extends BaseExchange implements ILifecycleHandler
 
     public function currentFeeSchedule()
     {
+        $feeSchedule = new FeeSchedule();
         //https://support.bittrex.com/hc/en-us/articles/115000199651-What-fees-does-Bittrex-charge-
         foreach ($this->supportedCurrencyPairs() as $pair) {
             $feeSchedule->addPairFee($pair, 0.25, 0.25);

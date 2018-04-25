@@ -11,6 +11,7 @@ use CryptoMarket\Account\EthereumAccount;
 use CryptoMarket\Account\EthereumClassicAccount;
 
 use CryptoMarket\Exchange\ExchangeName;
+use CryptoMarket\Exchange\Binance;
 use CryptoMarket\Exchange\Bitfinex;
 use CryptoMarket\Exchange\Bitstamp;
 use CryptoMarket\Exchange\Bittrex;
