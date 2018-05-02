@@ -10,6 +10,7 @@ use CryptoMarket\Exchange\ILifecycleHandler;
 
 use CryptoMarket\Record\Currency;
 use CryptoMarket\Record\CurrencyPair;
+use CryptoMarket\Record\FeeSchedule;
 use CryptoMarket\Record\OrderBook;
 use CryptoMarket\Record\OrderExecution;
 use CryptoMarket\Record\OrderType;

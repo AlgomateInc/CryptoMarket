@@ -11,6 +11,7 @@ use CryptoMarket\Exchange\ILifecycleHandler;
 
 use CryptoMarket\Record\Currency;
 use CryptoMarket\Record\CurrencyPair;
+use CryptoMarket\Record\FeeSchedule;
 use CryptoMarket\Record\OrderBook;
 use CryptoMarket\Record\OrderExecution;
 use CryptoMarket\Record\OrderType;
@@ -63,14 +64,14 @@ class Bittrex extends BaseExchange implements ILifecycleHandler
         return 'Bittrex';
     }
 
-    public function supports($currency_pair)
-    {
-        return in_array($currency_pair, $this->supported_pairs);
-    }
-
     public function balances()
     {
-        return $this->account_query('getbalances?');
+        $res = $this->account_query('getbalances?');
+        $ret = [];
+        foreach ($res as $bal) {
+            $ret[$bal['Currency']] = $bal['Balance'];
+        }
+        return $ret;
     }
 
     public function tradingFee($pair, $tradingRole, $thirty_day_volume)

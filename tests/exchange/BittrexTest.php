@@ -91,6 +91,9 @@ class BittrexTest extends TestCase
         $bals = self::$mkt->balances();
         $this->assertNotNull($bals);
         $this->assertNotEmpty($bals);
+        foreach ($bals as $ccy=>$bal){
+            $this->assertTrue(in_array($ccy, self::$mkt->supportedCurrencies()));
+        }
     }
 
     public function testBuy()
