@@ -56,17 +56,17 @@ class GeminiTest extends TestCase
     public function testFees()
     {
         $this->assertTrue(self::$mkt instanceof Gemini);
-        $this->assertEquals(0.25, self::$mkt->tradingFee(CurrencyPair::BTCUSD, TradingRole::Taker, 1000.0));
-        $this->assertEquals(0.15, self::$mkt->tradingFee(CurrencyPair::BTCUSD, TradingRole::Taker, 10000.0));
-        $this->assertEquals(0.25, self::$mkt->tradingFee(CurrencyPair::ETHUSD, TradingRole::Taker, 10.0));
-        $this->assertEquals(0.15, self::$mkt->tradingFee(CurrencyPair::ETHUSD, TradingRole::Taker, 200000.0));
+        $this->assertEquals(0.15, self::$mkt->tradingFee(CurrencyPair::BTCUSD, TradingRole::Taker, 1000.0));
+        $this->assertEquals(0.10, self::$mkt->tradingFee(CurrencyPair::BTCUSD, TradingRole::Taker, 10000.0));
+        $this->assertEquals(1.00, self::$mkt->tradingFee(CurrencyPair::ETHUSD, TradingRole::Taker, 10.0));
+        $this->assertEquals(0.10, self::$mkt->tradingFee(CurrencyPair::ETHUSD, TradingRole::Taker, 200000.0));
     }
 
     public function testUserFees()
     {
         $this->assertTrue(self::$mkt instanceof Gemini);
-        $this->assertEquals(0.25, self::$mkt->currentTradingFee(CurrencyPair::BTCUSD, TradingRole::Taker));
-        $this->assertEquals(0.25, self::$mkt->currentTradingFee(CurrencyPair::ETHUSD, TradingRole::Maker));
+        $this->assertEquals(1.00, self::$mkt->currentTradingFee(CurrencyPair::BTCUSD, TradingRole::Taker));
+        $this->assertEquals(1.00, self::$mkt->currentTradingFee(CurrencyPair::ETHUSD, TradingRole::Maker));
     }
 
     public function testFeeSchedule()
@@ -164,6 +164,12 @@ class GeminiTest extends TestCase
             $res = self::$mkt->depth($pair);
             $this->assertNotNull($res);
         }
+    }
+
+    public function testTransactions()
+    {
+        $res = self::$mkt->transactions();
+        $this->assertNotNull($res);
     }
 
     private function checkAndCancelOrder($response)

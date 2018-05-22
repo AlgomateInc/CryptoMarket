@@ -55,16 +55,17 @@ class Poloniex extends BaseExchange implements ILifecycleHandler
         // From https://poloniex.com/fees/
         $this->feeSchedule = new FeeSchedule();
         $fallbackSchedule = new FeeScheduleList();
-        $fallbackSchedule->push(new FeeScheduleItem(0.0, 6.0e2, 0.25, 0.15));
-        $fallbackSchedule->push(new FeeScheduleItem(6.0e2, 1.2e3, 0.24, 0.14));
-        $fallbackSchedule->push(new FeeScheduleItem(1.2e3, 2.4e3, 0.22, 0.12));
-        $fallbackSchedule->push(new FeeScheduleItem(2.4e3, 6.0e3, 0.20, 0.10));
-        $fallbackSchedule->push(new FeeScheduleItem(6.0e3, 1.2e4, 0.16, 0.08));
-        $fallbackSchedule->push(new FeeScheduleItem(1.2e4, 1.8e4, 0.14, 0.05));
-        $fallbackSchedule->push(new FeeScheduleItem(1.8e4, 2.4e4, 0.12, 0.02));
-        $fallbackSchedule->push(new FeeScheduleItem(2.4e4, 6.0e4, 0.10, 0.00));
-        $fallbackSchedule->push(new FeeScheduleItem(6.0e4, 1.2e5, 0.08, 0.00));
-        $fallbackSchedule->push(new FeeScheduleItem(1.2e5, INF, 0.05, 0.00));
+        $fallbackSchedule->push(new FeeScheduleItem(0.0, 5.0e5, 0.20, 0.10));
+        $fallbackSchedule->push(new FeeScheduleItem(5.0e5, 1.0e6, 0.20, 0.08));
+        $fallbackSchedule->push(new FeeScheduleItem(1.0e6, 2.5e6, 0.20, 0.06));
+        $fallbackSchedule->push(new FeeScheduleItem(2.5e6, 5.0e6, 0.20, 0.04));
+        $fallbackSchedule->push(new FeeScheduleItem(5.0e6, 7.5e6, 0.20, 0.02));
+        $fallbackSchedule->push(new FeeScheduleItem(7.5e6, 1.0e7, 0.20, 0.00));
+        $fallbackSchedule->push(new FeeScheduleItem(1.0e7, 1.5e7, 0.18, 0.00));
+        $fallbackSchedule->push(new FeeScheduleItem(1.5e7, 2.0e7, 0.16, 0.00));
+        $fallbackSchedule->push(new FeeScheduleItem(2.0e7, 2.5e7, 0.14, 0.00));
+        $fallbackSchedule->push(new FeeScheduleItem(2.5e7, 3.0e7, 0.12, 0.00));
+        $fallbackSchedule->push(new FeeScheduleItem(3.0e7, INF, 0.10, 0.00));
         $this->feeSchedule->setFallbackFees($fallbackSchedule);
 
         $this->supportedPairs = array();
@@ -100,13 +101,13 @@ class Poloniex extends BaseExchange implements ILifecycleHandler
 
     public function tradingFee($pair, $tradingRole, $volume)
     {
-        // NOTE: all volumes are supposed to be in terms of BTC, so adjust 
-        // volume in terms of BTC if the quote currency is not BTC
+        // NOTE: all volumes are supposed to be in terms of USD, so adjust 
+        // volume in terms of USD if the quote currency is not USD
         $quote = CurrencyPair::Quote($pair);
-        if ($quote != Currency::BTC) {
-            $subPair = CurrencyPair::MakePair(Currency::BTC, $quote);
+        if ($quote != Currency::USD) {
+            $subPair = CurrencyPair::MakePair($quote, Currency::USD);
             $ticker = $this->ticker($subPair);
-            $volume = $volume / $ticker->last;
+            $volume = $volume * $ticker->last;
         } 
 
         return $this->feeSchedule->getFee($pair, $tradingRole, $volume);

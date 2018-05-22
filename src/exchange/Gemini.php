@@ -19,8 +19,12 @@ use CryptoMarket\Record\CurrencyPair;
 use CryptoMarket\Record\FeeSchedule;
 use CryptoMarket\Record\FeeScheduleItem;
 use CryptoMarket\Record\FeeScheduleList;
+use CryptoMarket\Record\Transaction;
+use CryptoMarket\Record\TransactionType;
 use CryptoMarket\Record\Ticker;
 use CryptoMarket\Record\TradingRole;
+
+use MongoDB\BSON\UTCDateTime;
 
 class Gemini extends Bitfinex
 {
@@ -48,22 +52,30 @@ class Gemini extends Bitfinex
     {
         $this->feeSchedule = new FeeSchedule();
 
-        // From https://gemini.com/fee-schedule/
+        // From https://gemini.com/trading-fee-schedule/
         $btcFeeSchedule = new FeeScheduleList();
-        $btcFeeSchedule->push(new FeeScheduleItem(0.0, 1.0e3, 0.25, 0.25));
-        $btcFeeSchedule->push(new FeeScheduleItem(1.0e3, 2.0e3, 0.25, 0.20));
-        $btcFeeSchedule->push(new FeeScheduleItem(2.0e3, 3.0e3, 0.25, 0.15));
-        $btcFeeSchedule->push(new FeeScheduleItem(3.0e3, 5.0e3, 0.25, 0.10));
-        $btcFeeSchedule->push(new FeeScheduleItem(5.0e3, 1.0e4, 0.25, 0.05));
-        $btcFeeSchedule->push(new FeeScheduleItem(1.0e4, INF, 0.15, 0.00));
+        $btcFeeSchedule->push(new FeeScheduleItem(0.0, 5.0, 1.00, 1.00));
+        $btcFeeSchedule->push(new FeeScheduleItem(5.0, 1.0e1, 0.75, 0.75));
+        $btcFeeSchedule->push(new FeeScheduleItem(1.0e1, 1.0e2, 0.50, 0.25));
+        $btcFeeSchedule->push(new FeeScheduleItem(1.0e2, 1.0e3, 0.25, 0.15));
+        $btcFeeSchedule->push(new FeeScheduleItem(1.0e3, 2.0e3, 0.15, 0.10));
+        $btcFeeSchedule->push(new FeeScheduleItem(2.0e3, INF, 0.10, 0.00));
 
         $ethFeeSchedule = new FeeScheduleList();
-        $ethFeeSchedule->push(new FeeScheduleItem(0.0, 2.0e4, 0.25, 0.25));
-        $ethFeeSchedule->push(new FeeScheduleItem(2.0e4, 4.0e4, 0.25, 0.20));
-        $ethFeeSchedule->push(new FeeScheduleItem(4.0e4, 6.0e4, 0.25, 0.15));
-        $ethFeeSchedule->push(new FeeScheduleItem(6.0e4, 1.0e5, 0.25, 0.10));
-        $ethFeeSchedule->push(new FeeScheduleItem(1.0e5, 2.0e5, 0.25, 0.05));
-        $ethFeeSchedule->push(new FeeScheduleItem(2.0e5, INF, 0.15, 0.00));
+        $ethFeeSchedule->push(new FeeScheduleItem(0.0, 5.0e1, 1.00, 1.00));
+        $ethFeeSchedule->push(new FeeScheduleItem(5.0e1, 1.0e2, 0.75, 0.75));
+        $ethFeeSchedule->push(new FeeScheduleItem(1.0e2, 1.0e3, 0.50, 0.25));
+        $ethFeeSchedule->push(new FeeScheduleItem(1.0e3, 1.0e4, 0.25, 0.15));
+        $ethFeeSchedule->push(new FeeScheduleItem(1.0e4, 2.0e4, 0.15, 0.10));
+        $ethFeeSchedule->push(new FeeScheduleItem(2.0e4, INF, 0.10, 0.00));
+
+        $zecFeeSchedule = new FeeScheduleList();
+        $zecFeeSchedule->push(new FeeScheduleItem(0.0, 1.0e2, 1.00, 1.00));
+        $zecFeeSchedule->push(new FeeScheduleItem(1.0e2, 2.0e2, 0.75, 0.75));
+        $zecFeeSchedule->push(new FeeScheduleItem(2.0e2, 1.0e3, 0.50, 0.25));
+        $zecFeeSchedule->push(new FeeScheduleItem(1.0e3, 5.0e3, 0.25, 0.15));
+        $zecFeeSchedule->push(new FeeScheduleItem(5.0e3, 1.0e4, 0.15, 0.10));
+        $zecFeeSchedule->push(new FeeScheduleItem(1.0e4, INF, 0.10, 0.00));
 
         $pairs = CurlHelper::query($this->getApiUrl() . 'symbols');
         foreach($pairs as $geminiPair){
@@ -75,6 +87,8 @@ class Gemini extends Bitfinex
                 $this->feeSchedule->addPairFees($pair, $btcFeeSchedule);
             } else if ($base == Currency::ETH) {
                 $this->feeSchedule->addPairFees($pair, $ethFeeSchedule);
+            } else if ($base == Currency::ZEC) {
+                $this->feeSchedule->addPairFees($pair, $zecFeeSchedule);
             } else {
                 throw new \Exception("Unsupported pair $pair in Gemini, implement proper fee structure");
             }
@@ -84,14 +98,23 @@ class Gemini extends Bitfinex
         $this->minOrderSizes[CurrencyPair::BTCUSD] = 0.00001;
         $this->minOrderSizes[CurrencyPair::ETHUSD] = 0.001;
         $this->minOrderSizes[CurrencyPair::ETHBTC] = 0.001;
+        $this->minOrderSizes[CurrencyPair::ZECUSD] = 0.001;
+        $this->minOrderSizes[CurrencyPair::ZECBTC] = 0.001;
+        $this->minOrderSizes[CurrencyPair::ZECETH] = 0.001;
 
         $this->basePrecisions[CurrencyPair::BTCUSD] = 8;
         $this->basePrecisions[CurrencyPair::ETHUSD] = 6;
         $this->basePrecisions[CurrencyPair::ETHBTC] = 6;
+        $this->basePrecisions[CurrencyPair::ZECUSD] = 6;
+        $this->basePrecisions[CurrencyPair::ZECBTC] = 6;
+        $this->basePrecisions[CurrencyPair::ZECETH] = 6;
 
         $this->quotePrecisions[CurrencyPair::BTCUSD] = 2;
         $this->quotePrecisions[CurrencyPair::ETHUSD] = 2;
         $this->quotePrecisions[CurrencyPair::ETHBTC] = 5;
+        $this->quotePrecisions[CurrencyPair::ZECUSD] = 2;
+        $this->quotePrecisions[CurrencyPair::ZECBTC] = 5;
+        $this->quotePrecisions[CurrencyPair::ZECETH] = 4;
     }
 
     public function positions()
@@ -121,6 +144,32 @@ class Gemini extends Bitfinex
             }
         }
         return $rebate;
+    }
+
+    public function transactions()
+    {
+        $ret = array();
+        $transactionInfo = $this->authQuery('transfers');
+        foreach ($transactionInfo as $trans) {
+            if ($trans['status'] == 'Complete' || $trans['status'] == 'Advanced') {
+                $tx = new Transaction();
+                $tx->exchange = ExchangeName::Gemini;
+                $tx->id = $trans['eid'];
+                if ($trans['type'] == 'Withdrawal') {
+                    $tx->type = TransactionType::Debit;
+                } else if ($trans['type'] == 'Deposit') {
+                    $tx->type = TransactionType::Credit;
+                } else {
+                    throw new \UnexpectedValueException('Transaction type [$trans] not supported');
+                }
+                $tx->currency = $trans['currency'];
+                $tx->amount = floatval($trans['amount']);
+                $tx->timestamp = new UTCDateTime(DateHelper::mongoDateOfPHPDate($trans['timestampms']/1000));
+
+                $ret[] = $tx;
+            }
+        }
+        return $ret;
     }
 
     public function currentFeeSchedule()

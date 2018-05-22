@@ -32,6 +32,7 @@ class Currency
     const DAO = 'DAO';
     const ETC = 'ETC';
     const USDT = 'USDT';
+    const ZEC = 'ZEC';
 
     public static function isFiat($currency)
     {

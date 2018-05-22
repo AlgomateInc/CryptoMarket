@@ -42,6 +42,9 @@ class CurrencyPair
     const ZECCNY = 'ZECCNY';
     const ZMCCNY = 'ZMCCNY';
     const GNTCNY = 'GNTCNY';
+    const ZECUSD = 'ZECUSD';
+    const ZECETH = 'ZECETH';
+    const ZECBTC = 'ZECBTC';
 
     // Fiat currency pairs
     const EURUSD = 'EURUSD';

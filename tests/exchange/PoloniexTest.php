@@ -114,20 +114,19 @@ class PoloniexTest extends TestCase
     public function testFees()
     {
         $this->assertTrue(self::$mkt instanceof Poloniex);
-        $usdMakerFee = self::$mkt->currentTradingFee(CurrencyPair::BTCUSD, TradingRole::Maker);
-        $eurMakerFee = self::$mkt->currentTradingFee(CurrencyPair::BTCEUR, TradingRole::Maker);
-        $this->assertEquals($usdMakerFee, $eurMakerFee);
-        $this->assertEquals(0.15, $eurMakerFee);
-        $usdTakerFee = self::$mkt->currentTradingFee(CurrencyPair::BTCUSD, TradingRole::Taker);
-        $eurTakerFee = self::$mkt->currentTradingFee(CurrencyPair::BTCEUR, TradingRole::Taker);
-        $this->assertEquals($usdTakerFee, $eurTakerFee);
-        $this->assertEquals(0.25, $eurTakerFee);
+        $btcMakerFee = self::$mkt->currentTradingFee(CurrencyPair::BTCUSD, TradingRole::Maker);
+        $ethMakerFee = self::$mkt->currentTradingFee(CurrencyPair::ETHUSD, TradingRole::Maker);
+        $this->assertEquals($btcMakerFee, $ethMakerFee);
+
+        $btcTakerFee = self::$mkt->currentTradingFee(CurrencyPair::BTCUSD, TradingRole::Taker);
+        $ethTakerFee = self::$mkt->currentTradingFee(CurrencyPair::ETHUSD, TradingRole::Taker);
+        $this->assertEquals($btcTakerFee, $ethTakerFee);
 
         foreach (self::$mkt->supportedCurrencyPairs() as $pair) {
             $quote = CurrencyPair::Quote($pair);
-            if ($quote == Currency::BTC) {
-                $this->assertEquals(0.1, self::$mkt->tradingFee($pair, TradingRole::Taker, 3.0e4));
-                $this->assertEquals(0.0, self::$mkt->tradingFee($pair, TradingRole::Maker, 3.0e4));
+            if ($quote == Currency::USD) {
+                $this->assertEquals(0.2, self::$mkt->tradingFee($pair, TradingRole::Taker, 3.0e4));
+                $this->assertEquals(0.1, self::$mkt->tradingFee($pair, TradingRole::Maker, 3.0e4));
             }
         }
     }
